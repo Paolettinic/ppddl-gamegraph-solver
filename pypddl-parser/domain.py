@@ -15,12 +15,24 @@
 
 class Domain(object):
 
-    def __init__(self, name, requirements, types, predicates, operators):
+    def __init__(   
+                    self,
+                    name,
+                    requirements,
+                    types,
+                    constants,
+                    predicates,
+                    functions,
+                    operators
+                ):
         self._name = name
         self._requirements = requirements
         self._types = types
+        self._constants = constants
         self._predicates = predicates
+        self._functions = functions
         self._operators = operators
+
 
     @property
     def name(self):
@@ -35,12 +47,20 @@ class Domain(object):
         return self._types[:]
 
     @property
+    def constants(self):
+        return self._constants[:]
+
+    @property
     def predicates(self):
         return self._predicates[:]
 
     @property
     def operators(self):
         return self._operators[:]
+    
+    @property
+    def functions(self):
+        return self._functions[:]
 
     def __str__(self):
         domain_str  = '@ Domain: {0}\n'.format(self._name)

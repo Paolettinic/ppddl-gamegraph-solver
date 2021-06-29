@@ -18,9 +18,10 @@ import itertools
 
 class Problem(object):
 
-    def __init__(self, name, domain, objects, init, goal):
+    def __init__(self, name, domain, requirements, objects, init, goal):
         self._name = name
         self._domain = domain
+        self._requirements = requirements
         self._objects = {}
         for obj in objects:
             self._objects[obj.type] = self._objects.get(obj.type, [])
@@ -35,6 +36,10 @@ class Problem(object):
     @property
     def domain(self):
         return self._domain
+    
+    @property
+    def requirement(self):
+        return self._requirements
 
     @property
     def objects(self):
@@ -51,6 +56,7 @@ class Problem(object):
     def __str__(self):
         problem_str  = '@ Problem: {0}\n'.format(self._name)
         problem_str += '>> domain: {0}\n'.format(self._domain)
+        problem_str += '>> requirements: {0}\n'.format(', '.join(self._requirements))
         problem_str += '>> objects:\n'
         for type, objects in self._objects.items():
             problem_str += '{0} -> {1}\n'.format(type, ', '.join(sorted(objects)))

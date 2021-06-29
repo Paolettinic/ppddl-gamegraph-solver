@@ -17,40 +17,69 @@
 from ply import lex
 from ply import yacc
 
-from term      import Term
-from literal   import Literal
-from predicate import Predicate
-from action    import Action
-from domain    import Domain
-from problem   import Problem
+from .term import Term
+from .literal import Literal
+from .predicate import Predicate
+from .action import Action
+from .domain import Domain
+from .problem import Problem
 
 
 tokens = (
     'NAME',
     'VARIABLE',
     'PROBABILITY',
+    'NUMBER',
+    'BINARYCOMP',
+    'BINARYOP',
     'LPAREN',
     'RPAREN',
     'HYPHEN',
     'EQUALS',
+    'NEGATIVE_PRECONDITIONS_KEY',
+    'DISJUNCTIVE_PRECONDITIONS_KEY',
+    'EXISTENTIAL_PRECONDITIONS_KEY',
+    'UNIVERSAL_PRECONDITIONS_KEY',
+    'QUANTIFIED_PRECONDITIONS_KEY',
+    'CONDITIONAL_EFFECT_KEY',
+    'PROBABILISTIC_EFFECTS_KEY',
+    'REWARDS_KEY',
+    'ADL_KEY',
+    'MDP_KEY',
     'DEFINE_KEY',
     'DOMAIN_KEY',
     'REQUIREMENTS_KEY',
     'STRIPS_KEY',
     'EQUALITY_KEY',
     'TYPING_KEY',
-    'PROBABILISTIC_EFFECTS_KEY',
     'TYPES_KEY',
+    'CONSTANTS_KEY',
     'PREDICATES_KEY',
+    'FUNCTIONS_KEY',
+    'EITHER_KEY',
     'ACTION_KEY',
     'PARAMETERS_KEY',
     'PRECONDITION_KEY',
     'EFFECT_KEY',
     'AND_KEY',
     'NOT_KEY',
+    'ASSIGN_KEY',
+    'SCALE_UP_KEY',
+    'SCALE_DOWN_KEY',
+    'INCREASE_KEY',
+    'INCREASE_KEY',
+    'REWARD_KEY',
+    'MINIMIZE_KEY',
+    'MAXIMIZE_KEY',
+    'EXISTENTIAL_KEY',
+    'FORALL_KEY',
+    'WHEN_KEY',
     'PROBABILISTIC_KEY',
+    'TOTALTIME_KEY',
+    'GOALACHIEVED_KEY',
     'PROBLEM_KEY',
     'OBJECTS_KEY',
+    'METRIC_KEY',
     'INIT_KEY',
     'GOAL_KEY'
 )
@@ -64,51 +93,90 @@ t_EQUALS = r'='
 t_ignore = ' \t'
 
 reserved = {
-    'define'                    : 'DEFINE_KEY',
-    'domain'                    : 'DOMAIN_KEY',
-    ':requirements'             : 'REQUIREMENTS_KEY',
-    ':strips'                   : 'STRIPS_KEY',
-    ':equality'                 : 'EQUALITY_KEY',
-    ':typing'                   : 'TYPING_KEY',
-    ':probabilistic-effects'    : 'PROBABILISTIC_EFFECTS_KEY',
-    ':types'                    : 'TYPES_KEY',
-    ':predicates'               : 'PREDICATES_KEY',
-    ':action'                   : 'ACTION_KEY',
-    ':parameters'               : 'PARAMETERS_KEY',
-    ':precondition'             : 'PRECONDITION_KEY',
-    ':effect'                   : 'EFFECT_KEY',
-    'and'                       : 'AND_KEY',
-    'not'                       : 'NOT_KEY',
-    'probabilistic'             : 'PROBABILISTIC_KEY',
-    'problem'                   : 'PROBLEM_KEY',
-    ':domain'                   : 'DOMAIN_KEY',
-    ':objects'                  : 'OBJECTS_KEY',
-    ':init'                     : 'INIT_KEY',
-    ':goal'                     : 'GOAL_KEY'
+    'define'                     : 'DEFINE_KEY',
+    'domain'                     : 'DOMAIN_KEY',
+    ':requirements'              : 'REQUIREMENTS_KEY',
+    ':strips'                    : 'STRIPS_KEY',
+    ':equality'                  : 'EQUALITY_KEY',
+    ':negative-preconditions'    : 'NEGATIVE_PRECONDITIONS_KEY',
+    ':disjunctive-preconditions' : 'DISJUNCTIVE_PRECONDITIONS_KEY',
+    ':existential-preconditions' : 'EXISTENTIAL_PRECONDITIONS_KEY',
+    ':universal-preconditions'   : 'UNIVERSAL_PRECONDITIONS_KEY',
+    ':quantified-preconditions'  : 'QUANTIFIED_PRECONDITIONS_KEY',
+    ':conditional-effects'       : 'CONDITIONAL_EFFECTS_KEY',
+    ':probabilistic-effects'     : 'PROBABILISTIC_EFFECTS_KEY',
+    ':rewards'                   : 'REWARDS_KEY',
+    ':fluents'                   : 'FLUENTS_KEY',
+    ':adl'                       : 'ADL_KEY',
+    ':mdp'                       : 'MDP_KEY',
+    ':typing'                    : 'TYPING_KEY',
+    ':types'                     : 'TYPES_KEY',
+    ':constants'                 : 'CONSTANTS_KEY',
+    ':predicates'                : 'PREDICATES_KEY',
+    ':functions'                 : 'FUNCTIONS_KEY',
+    ':action'                    : 'ACTION_KEY',
+    ':parameters'                : 'PARAMETERS_KEY',
+    ':precondition'              : 'PRECONDITION_KEY',
+    ':effect'                    : 'EFFECT_KEY',
+    'and'                        : 'AND_KEY',
+    'not'                        : 'NOT_KEY',
+    'either'                     : 'EITHER_KEY',
+    'exists'                     : 'EXISTENTIAL_KEY',
+    'forall'                     : 'FORALL_KEY',
+    'when'                       : 'WHEN_KEY',
+    'probabilistic'              : 'PROBABILISTIC_KEY',
+    'problem'                    : 'PROBLEM_KEY',
+    'assign'                     : 'ASSIGN_KEY',
+    'scale-up'                   : 'SCALE_UP_KEY',
+    'scale-down'                 : 'SCALE_DOWN_KEY',
+    'increase'                   : 'INCREASE_KEY',
+    'decrease'                   : 'DECREASE_KEY',
+    'reward'                     : 'REWARD_KEY',
+    'minimize'                   : 'MINIMIZE_KEY',
+    'maximize'                   : 'MAXIMIZE_KEY',
+    'total-time'                 : 'TOTALTIME_KEY',
+    'goal-achieved'              : 'GOALACHIEVED_KEY',
+    ':domain'                    : 'DOMAIN_KEY',
+    ':objects'                   : 'OBJECTS_KEY',
+    ':metric'                    : 'METRIC_KEY',
+    ':init'                      : 'INIT_KEY',
+    ':goal'                      : 'GOAL_KEY'
 }
 
 
 def t_KEYWORD(t):
-    r':?[a-zA-z_][a-zA-Z_0-9\-]*'
+    r':?[a-zA-Z_][a-zA-Z_0-9\-]*'
     t.type = reserved.get(t.value, 'NAME')
     return t
 
 
 def t_NAME(t):
-    r'[a-zA-z_][a-zA-Z_0-9\-]*'
+    r'[a-zA-Z_][a-zA-Z_0-9\-]*'
     return t
 
 
 def t_VARIABLE(t):
-    r'\?[a-zA-z_][a-zA-Z_0-9\-]*'
+    r'\?[a-zA-Z_][a-zA-Z_0-9\-]*'
     return t
 
-
-def t_PROBABILITY(t):
-    r'[0-1]\.\d+'
+def t_NUMBER(t):
+    r'-?\d+\.?\d+'
     t.value = float(t.value)
     return t
 
+def t_PROBABILITY(t):
+    #r'[0-1]\.\d+'
+    r'(0\.\d+|1\.0+)'
+    t.value = float(t.value)
+    return t
+
+def t_BINARYCOMP(t):
+    r'<=|>=|<|>|='
+    return t
+
+def t_BINARYOP(t):
+    r'[\+\-\*\/]'
+    return t
 
 def t_newline(t):
     r'\n+'
@@ -131,13 +199,13 @@ def p_pddl(p):
 
 
 def p_domain(p):
-    '''domain : LPAREN DEFINE_KEY domain_def require_def types_def predicates_def action_def_lst RPAREN'''
-    p[0] = Domain(p[3], p[4], p[5], p[6], p[7])
+    '''domain : LPAREN DEFINE_KEY domain_def require_def types_def constants_def predicates_def functions_def action_def_lst RPAREN'''
+    p[0] = Domain(p[3], p[4], p[5], p[6], p[7], p[8], p[9])
 
 
 def p_problem(p):
-    '''problem : LPAREN DEFINE_KEY problem_def domain_def objects_def init_def goal_def RPAREN'''
-    p[0] = Problem(p[3], p[4], p[5], p[6], p[7])
+    '''problem : LPAREN DEFINE_KEY problem_def domain_def require_def objects_def init_def goal_def RPAREN'''
+    p[0] = Problem(p[3], p[4], p[5], p[6], p[7], p[8])
 
 
 def p_domain_def(p):

@@ -16,7 +16,7 @@
 
 import argparse
 
-from pddlparser import PDDLParser
+from .pddlparser import PDDLParser
 
 
 def parse():

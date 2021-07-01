@@ -1,0 +1,28 @@
+
+<nome par1-tipo par2-tipo>
+
+class Predicates
+
+d = {}
+
+for p in predicates:
+    d[p.nome] = [a for a in p.args]
+
+
+s0 = set()
+for l in literals:
+    if l.name in d:
+        s0.push(l)
+
+espandi(stato)
+    for a in actions: se non ci sono sink o goal
+        if a.preconditions.match(stato):
+           listset = []
+            s = set()
+            s.push(a.effects) //controlla effetti  not
+            listset.append(s)
+             /*
+                controlla cicli (se ho già visto s)
+                collega s a stato e
+            */
+           for s in listset: espandi(s)

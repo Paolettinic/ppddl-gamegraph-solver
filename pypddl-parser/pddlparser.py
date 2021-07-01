@@ -17,12 +17,12 @@
 from ply import lex
 from ply import yacc
 
-from .term import Term
-from .literal import Literal
-from .predicate import Predicate
-from .action import Action
-from .domain import Domain
-from .problem import Problem
+from term import Term
+from literal import Literal
+from predicate import Predicate
+from action import Action
+from domain import Domain
+from problem import Problem
 
 
 tokens = (
@@ -55,7 +55,6 @@ tokens = (
     'TYPES_KEY',
     'CONSTANTS_KEY',
     'PREDICATES_KEY',
-    'FUNCTIONS_KEY',
     'EITHER_KEY',
     'ACTION_KEY',
     'PARAMETERS_KEY',
@@ -66,7 +65,6 @@ tokens = (
     'ASSIGN_KEY',
     'SCALE_UP_KEY',
     'SCALE_DOWN_KEY',
-    'INCREASE_KEY',
     'INCREASE_KEY',
     'REWARD_KEY',
     'MINIMIZE_KEY',
@@ -83,7 +81,7 @@ tokens = (
     'INIT_KEY',
     'GOAL_KEY'
 )
-
+#'FUNCTIONS_KEY',
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
@@ -113,7 +111,6 @@ reserved = {
     ':types'                     : 'TYPES_KEY',
     ':constants'                 : 'CONSTANTS_KEY',
     ':predicates'                : 'PREDICATES_KEY',
-    ':functions'                 : 'FUNCTIONS_KEY',
     ':action'                    : 'ACTION_KEY',
     ':parameters'                : 'PARAMETERS_KEY',
     ':precondition'              : 'PRECONDITION_KEY',
@@ -142,7 +139,7 @@ reserved = {
     ':init'                      : 'INIT_KEY',
     ':goal'                      : 'GOAL_KEY'
 }
-
+#':functions'                 : 'FUNCTIONS_KEY',
 
 def t_KEYWORD(t):
     r':?[a-zA-Z_][a-zA-Z_0-9\-]*'
@@ -159,14 +156,14 @@ def t_VARIABLE(t):
     r'\?[a-zA-Z_][a-zA-Z_0-9\-]*'
     return t
 
-def t_NUMBER(t):
-    r'-?\d+\.?\d+'
-    t.value = float(t.value)
-    return t
-
 def t_PROBABILITY(t):
     #r'[0-1]\.\d+'
     r'(0\.\d+|1\.0+)'
+    t.value = float(t.value)
+    return t
+
+def t_NUMBER(t):
+    r'-?\d+\.?\d+'
     t.value = float(t.value)
     return t
 
@@ -174,9 +171,6 @@ def t_BINARYCOMP(t):
     r'<=|>=|<|>|='
     return t
 
-def t_BINARYOP(t):
-    r'[\+\-\*\/]'
-    return t
 
 def t_newline(t):
     r'\n+'
@@ -199,13 +193,13 @@ def p_pddl(p):
 
 
 def p_domain(p):
-    '''domain : LPAREN DEFINE_KEY domain_def require_def types_def constants_def predicates_def functions_def action_def_lst RPAREN'''
-    p[0] = Domain(p[3], p[4], p[5], p[6], p[7], p[8], p[9])
+    '''domain : LPAREN DEFINE_KEY domain_def opt_dom_parts RPAREN''' #TODO: add functions_def
+    p[0] = Domain(p[3], p[4])
 
 
 def p_problem(p):
-    '''problem : LPAREN DEFINE_KEY problem_def domain_def require_def objects_def init_def goal_def RPAREN'''
-    p[0] = Problem(p[3], p[4], p[5], p[6], p[7], p[8])
+    '''problem : LPAREN DEFINE_KEY problem_def domain_def opt_prob_parts goal_def RPAREN'''
+    p[0] = Problem(p[3], p[4], p[5], p[6])
 
 
 def p_domain_def(p):
@@ -217,19 +211,52 @@ def p_problem_def(p):
     '''problem_def : LPAREN PROBLEM_KEY NAME RPAREN'''
     p[0] = p[3]
 
+def p_opt_dom_parts(p):
+    '''opt_dom_parts : opt_dom_part opt_dom_parts
+                       | opt_dom_part'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    if len(p) == 3:
+        p[0] = [p[1]] + p[2] 
+
+def p_opt_dom_part(p):
+    '''opt_dom_part : require_def
+                       | types_def
+                       | constants_def
+                       | predicates_def
+                       | actions_def
+                       | empty'''
+    p[0] = p[1]
+
+def p_opt_prob_parts(p):
+    '''opt_prob_parts : opt_prob_parts opt_prob_part 
+                       | opt_prob_part'''
+    if len(p) == 2:
+        p[0] = p[1]
+    if len(p) == 3:
+        p[0] = [p[1]] + [p[2]] 
+
+def p_opt_prob_part(p):
+    '''opt_prob_part : require_def
+                        | objects_def
+                        | init_def
+                        | empty'''
+    p[0] = p[1]
+
+
 
 def p_objects_def(p):
     '''objects_def : LPAREN OBJECTS_KEY typed_constants_lst RPAREN'''
-    p[0] = p[3]
+    p[0] = {"objects":p[3]}
 
 
 def p_init_def(p):
     '''init_def : LPAREN INIT_KEY LPAREN AND_KEY ground_predicates_lst RPAREN RPAREN
                 | LPAREN INIT_KEY ground_predicates_lst RPAREN'''
     if len(p) == 5:
-        p[0] = p[3]
+        p[0] = {"init":p[3]}
     elif len(p) == 8:
-        p[0] = p[5]
+        p[0] = {"init":p[5]}
 
 
 def p_goal_def(p):
@@ -239,7 +266,7 @@ def p_goal_def(p):
 
 def p_require_def(p):
     '''require_def : LPAREN REQUIREMENTS_KEY require_key_lst RPAREN'''
-    p[0] = p[3]
+    p[0] = {"requirements":p[3]}
 
 
 def p_require_key_lst(p):
@@ -261,12 +288,16 @@ def p_require_key(p):
 
 def p_types_def(p):
     '''types_def : LPAREN TYPES_KEY names_lst RPAREN'''
-    p[0] = p[3]
+    p[0] = {"types":p[3]}
+
+def p_constants_def(p):
+    '''constants_def : LPAREN CONSTANTS_KEY typed_constants_lst RPAREN'''
+    p[0] = {"constants":p[3]}
 
 
 def p_predicates_def(p):
     '''predicates_def : LPAREN PREDICATES_KEY predicate_def_lst RPAREN'''
-    p[0] = p[3]
+    p[0] = {"predicates":p[3]}
 
 
 def p_predicate_def_lst(p):
@@ -286,6 +317,16 @@ def p_predicate_def(p):
     elif len(p) == 5:
         p[0] = Predicate(p[2], p[3])
 
+# TODO: finish
+# def p_functions_def(p):
+#     '''predicates_def : LPAREN PREDICATES_KEY predicate_def_lst RPAREN'''
+#     p[0] = p[3]
+
+
+def p_actions_def(p):
+    '''actions_def : action_def
+                    | action_def_lst'''
+    p[0] = {"actions":p[1]}
 
 def p_action_def_lst(p):
     '''action_def_lst : action_def action_def_lst
@@ -455,6 +496,9 @@ def p_constant(p):
     '''constant : NAME'''
     p[0] = p[1]
 
+def p_empty(p):
+     'empty :'
+     p[0] = None
 
 def p_error(p):
     print("Error: syntax error when parsing '{}'".format(p))

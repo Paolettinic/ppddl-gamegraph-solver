@@ -18,15 +18,24 @@ import itertools
 
 class Problem(object):
 
-    def __init__(self, name, domain, requirements, objects, init, goal):
+    def __init__(self, name, domain, prob_body, goal):
         self._name = name
         self._domain = domain
-        self._requirements = requirements
+
+        self._requirements = None
         self._objects = {}
-        for obj in objects:
-            self._objects[obj.type] = self._objects.get(obj.type, [])
-            self._objects[obj.type].append(str(obj.value))
-        self._init = set(map(str, init))
+        self._init = None
+
+        for d in prob_body:
+            k = next(iter(d))
+            if k == "requirements":
+                self._requirements = d[k]
+            elif k == "objects":
+                for obj in d[k]:
+                    self._objects[obj.type] = self._objects.get(obj.type, [])
+                    self._objects[obj.type].append(str(obj.value))
+            elif k == "init":
+                self._init = set(map(str, d[k]))
         self._goal = set(map(str, goal))
 
     @property
@@ -38,7 +47,7 @@ class Problem(object):
         return self._domain
     
     @property
-    def requirement(self):
+    def requirements(self):
         return self._requirements
 
     @property
@@ -56,10 +65,11 @@ class Problem(object):
     def __str__(self):
         problem_str  = '@ Problem: {0}\n'.format(self._name)
         problem_str += '>> domain: {0}\n'.format(self._domain)
-        problem_str += '>> requirements: {0}\n'.format(', '.join(self._requirements))
-        problem_str += '>> objects:\n'
-        for type, objects in self._objects.items():
-            problem_str += '{0} -> {1}\n'.format(type, ', '.join(sorted(objects)))
-        problem_str += '>> init:\n{0}\n'.format(', '.join(sorted(self._init)))
+        problem_str += '>> requirements: {0}\n'.format(', '.join(self._requirements)) if self._requirements else ""
+        if self._objects:
+            problem_str += '>> objects:\n'
+            for type, objects in self._objects.items():
+                problem_str += '{0} -> {1}\n'.format(type, ', '.join(sorted(objects)))
+        problem_str += '>> init:\n{0}\n'.format(', '.join(sorted(self._init))) if self._init else ""
         problem_str += '>> goal:\n{0}\n'.format(', '.join(sorted(self._goal)))
         return problem_str

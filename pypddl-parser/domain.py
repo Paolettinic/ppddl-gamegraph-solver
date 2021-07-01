@@ -18,21 +18,32 @@ class Domain(object):
     def __init__(   
                     self,
                     name,
-                    requirements,
-                    types,
-                    constants,
-                    predicates,
-                    functions,
-                    operators
+                    dom_opt_parts
                 ):
         self._name = name
-        self._requirements = requirements
-        self._types = types
-        self._constants = constants
-        self._predicates = predicates
-        self._functions = functions
-        self._operators = operators
 
+        self._requirements = None
+        self._types = None
+        self._constants = None
+        self._predicates = None
+        self._functions = None
+        self._operators = None
+
+
+        for d in dom_opt_parts:
+            k = next(iter(d))
+            if k == "requirements":
+                self._requirements = d[k]
+            elif k == "types":
+                self._types = d[k]
+            elif k == "constants":
+                self._constants = d[k]
+            elif k == "predicates":
+                self._predicates = d[k]
+            elif k == "functions":
+                self._functions = d[k]
+            elif k == "actions":
+                self._operators = d[k]
 
     @property
     def name(self):
@@ -58,15 +69,15 @@ class Domain(object):
     def operators(self):
         return self._operators[:]
     
-    @property
-    def functions(self):
-        return self._functions[:]
+    # @property
+    # def functions(self):
+    #     return self._functions[:]
 
     def __str__(self):
         domain_str  = '@ Domain: {0}\n'.format(self._name)
-        domain_str += '>> requirements: {0}\n'.format(', '.join(self._requirements))
-        domain_str += '>> types: {0}\n'.format(', '.join(self._types))
-        domain_str += '>> predicates: {0}\n'.format(', '.join(map(str, self._predicates)))
+        domain_str += '>> requirements: {0}\n'.format(', '.join(self._requirements)) if self._requirements else ""
+        domain_str += '>> types: {0}\n'.format(', '.join(self._types)) if self._types else ""
+        domain_str += '>> predicates: {0}\n'.format(', '.join(map(str, self._predicates))) if self._types else ""
         domain_str += '>> operators:\n    {0}\n'.format(
-            '\n    '.join(str(op).replace('\n', '\n    ') for op in self._operators))
+            '\n    '.join(str(op).replace('\n', '\n    ') for op in self._operators)) if self._operators else ""
         return domain_str

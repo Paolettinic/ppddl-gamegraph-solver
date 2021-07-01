@@ -15,8 +15,7 @@
 
 
 import argparse
-
-from .pddlparser import PDDLParser
+from pddlparser import PDDLParser
 
 
 def parse():
@@ -33,8 +32,10 @@ def parse():
 if __name__ == '__main__':
     args = parse()
 
-    domain  = PDDLParser.parse(args.domain)
-    problem = PDDLParser.parse(args.problem)
+    domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
+    problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
+
+
 
     print(domain)
     print(problem)

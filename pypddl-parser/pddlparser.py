@@ -167,9 +167,9 @@ def t_NUMBER(t):
     t.value = float(t.value)
     return t
 
-def t_BINARYCOMP(t):
-    r'<=|>=|<|>|='
-    return t
+# def t_BINARYCOMP(t):
+#     r'<=|>=|<|>|='
+#     return t
 
 
 def t_newline(t):

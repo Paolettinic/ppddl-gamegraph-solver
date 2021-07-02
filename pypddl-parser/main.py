@@ -16,7 +16,30 @@
 
 import argparse
 from pddlparser import PDDLParser
+import networkx as nx
 
+
+
+class Stato:
+    def __init__(self,tipo, set) -> None:
+        self._type = tipo
+        self._set = set
+        self._value = 0
+    
+    @property
+    def type(self):
+        return self._type
+    @property
+    def set(self):
+        return self._set
+    @property
+    def value(self):
+        return self._value
+    
+    def __str__(self):
+        str = f"Tipo:\t\t{self._type}\n"
+        str += f"Set:\t\t{self._set}"
+        return str
 
 def parse():
     usage = 'python3 main.py <DOMAIN> <INSTANCE>'
@@ -28,14 +51,28 @@ def parse():
 
     return parser.parse_args()
 
+def execute_actions(state, actions):
+    for a in actions:
+        check = 0
+        for prec in a.preconditions:
+            p = str(prec)
+            if not p in state:
+                check = 1
+        if check == 0:
+            '''all conditions verified'''
+            print("verified")
+        else:
+            print("not verified")
+            check=0
 
 if __name__ == '__main__':
     args = parse()
 
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
+    
 
-
-
-    print(domain)
-    print(problem)
+    execute_actions(problem.init, domain.operators)
+    print(problem.init)
+    for o in domain.operators:
+        print(o)

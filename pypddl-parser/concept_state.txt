@@ -26,3 +26,14 @@ espandi(stato)
                 collega s a stato e
             */
            for s in listset: espandi(s)
+
+G(VE)
+g.add(v)
+g.addEdge(g.root,v)
+
+
+HASHMAP O(1)
+
+Grafo -> Matrice?
+
+Simplesso

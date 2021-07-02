@@ -31,7 +31,7 @@ class Action(object):
         return self._params[:]
 
     @property
-    def precond(self):
+    def preconditions(self):
         return self._precond[:]
 
     @property

@@ -71,8 +71,9 @@ if __name__ == '__main__':
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
     
-
-    execute_actions(problem.init, domain.operators)
-    print(problem.init)
-    for o in domain.operators:
-        print(o)
+    print(domain)
+    print(problem)
+    # # execute_actions(problem.init, domain.operators)
+    # print(problem.init)
+    # for o in domain.operators:
+    #     print(o)

@@ -69,15 +69,16 @@ class Domain(object):
     def operators(self):
         return self._operators[:]
     
-    # @property
-    # def functions(self):
-    #     return self._functions[:]
+    @property
+    def functions(self):
+        return self._functions[:]
 
     def __str__(self):
         domain_str  = '@ Domain: {0}\n'.format(self._name)
         domain_str += '>> requirements: {0}\n'.format(', '.join(self._requirements)) if self._requirements else ""
         domain_str += '>> types: {0}\n'.format(', '.join(self._types)) if self._types else ""
         domain_str += '>> predicates: {0}\n'.format(', '.join(map(str, self._predicates))) if self._types else ""
+        domain_str += '>> functions: {0}\n'.format(', '.join(map(str, self._functions))) if self._functions else ""
         domain_str += '>> operators:\n    {0}\n'.format(
             '\n    '.join(str(op).replace('\n', '\n    ') for op in self._operators)) if self._operators else ""
         return domain_str

@@ -23,7 +23,7 @@ from predicate import Predicate
 from action import Action
 from domain import Domain
 from problem import Problem
-
+from function import Function
 
 tokens = (
     'NAME',
@@ -75,13 +75,13 @@ tokens = (
     'PROBABILISTIC_KEY',
     'TOTALTIME_KEY',
     'GOALACHIEVED_KEY',
+    'FUNCTIONS_KEY',
     'PROBLEM_KEY',
     'OBJECTS_KEY',
     'METRIC_KEY',
     'INIT_KEY',
     'GOAL_KEY'
 )
-#'FUNCTIONS_KEY',
 
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
@@ -135,11 +135,11 @@ reserved = {
     'goal-achieved'              : 'GOALACHIEVED_KEY',
     ':domain'                    : 'DOMAIN_KEY',
     ':objects'                   : 'OBJECTS_KEY',
+    ':functions'                 : 'FUNCTIONS_KEY',
     ':metric'                    : 'METRIC_KEY',
     ':init'                      : 'INIT_KEY',
     ':goal'                      : 'GOAL_KEY'
 }
-#':functions'                 : 'FUNCTIONS_KEY',
 
 def t_KEYWORD(t):
     r':?[a-zA-Z_][a-zA-Z_0-9\-]*'
@@ -225,6 +225,7 @@ def p_opt_dom_part(p):
                        | constants_def
                        | predicates_def
                        | actions_def
+                       | functions_def
                        | empty'''
     p[0] = p[1]
 
@@ -317,11 +318,26 @@ def p_predicate_def(p):
     elif len(p) == 5:
         p[0] = Predicate(p[2], p[3])
 
-# TODO: finish
-# def p_functions_def(p):
-#     '''predicates_def : LPAREN PREDICATES_KEY predicate_def_lst RPAREN'''
-#     p[0] = p[3]
 
+def p_functions_def(p):
+    '''functions_def : LPAREN FUNCTIONS_KEY function_def_list RPAREN'''
+    p[0] = {"functions":p[3]}
+
+def p_function_def_list(p):
+    '''function_def_list : function_def function_def_list 
+                        |  function_def'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    elif len(p) == 3:
+        p[0] = [p[1]] + p[2]
+
+def p_function_def(p):
+    '''function_def : LPAREN NAME VARIABLE HYPHEN type RPAREN
+                    | LPAREN NAME RPAREN'''
+    if len(p) == 7:
+        p[0] = Function(p[2],p[3],p[5])
+    elif len(p) == 4:
+        p[0] = Function(p[2])
 
 def p_actions_def(p):
     '''actions_def : action_def

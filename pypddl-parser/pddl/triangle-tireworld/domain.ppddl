@@ -4,6 +4,8 @@
 
 	(:types location)
 
+	(:functions (speed_limit ?x - road))
+	
 	(:predicates
 		(road ?from - location ?to - location)
 		(spare-in ?loc - location)

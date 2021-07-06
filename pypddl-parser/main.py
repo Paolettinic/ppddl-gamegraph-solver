@@ -108,7 +108,8 @@ def semantic_check(domain, problem) :
             return False
         elif not g.arity == domain_predicates[g.name]:
             print(f"Mismatch airty of predicate {g.name} in goal")
-
+            return False
+    return True
 
 if __name__ == '__main__':
 
@@ -118,7 +119,7 @@ if __name__ == '__main__':
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
     
     if semantic_check(domain, problem):
-        print("semantic check failed!")
+        print("semantic check passed!")
 
 
 

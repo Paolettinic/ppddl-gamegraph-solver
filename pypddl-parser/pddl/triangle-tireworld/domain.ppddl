@@ -4,7 +4,6 @@
 
 	(:types location)
 
-	(:functions (speed_limit ?x - road))
 	
 	(:predicates
 		(road ?from - location ?to - location)
@@ -12,6 +11,8 @@
 		(vehicle-at ?loc - location)
 		(not-flattire)
 		(hasspare))
+	
+	(:functions (speed_limit ?x - road))
 
 	(:action move-car
 		:parameters (?from - location ?to - location)

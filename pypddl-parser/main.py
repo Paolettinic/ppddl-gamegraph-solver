@@ -65,15 +65,61 @@ def execute_actions(state, actions):
             print("not verified")
             check=0
 
+def semantic_check(domain, problem) :
+    # check if predicates match with types
+    domain_predicates = {}
+
+        
+    for p in domain.predicates:
+        domain_predicates[p.name] = p.arity
+        for t in p.args:
+            if not t.type in domain.types:
+                print(f"Error: {t.type} not defined in domain types")
+                return False
+    # check if functions matches predicates:
+    for f in domain.functions:
+        if not f.predicate in domain_predicates:
+            print(f"Error: predicate {f.predicate} of function {f.name} not defined in domain")
+            return False
+    for a in domain.operators:
+        for p in a.params:
+            if not p.type in domain.types:
+                print(f"Error: {t.type} not defined in domain types")
+                return False
+    #check domain-problem match
+    if not problem.domain == domain.name:
+        print("Problem's domain doesn't match domain file!")
+        return False
+    for o in problem.objects:
+        if not o in domain.types:
+            print(f"Error: object has type: {t.type}, not defined in domain types")
+            return False
+    #check init predicates: name and arity
+    for i in problem.init:
+        if not i.name in domain_predicates:
+            print(f"Error: predicate {i.name} of init state not defined in domain")
+            return False
+        elif not i.arity == domain_predicates[i.name]:
+            print(f"Mismatch airty of predicate {i.name} in init")
+    #check goal predicates: name and airty
+    for g in problem.goal:
+        if not g.name in domain_predicates:
+            print(f"Error: predicate {g.name} of goal state not defined in domain")
+            return False
+        elif not g.arity == domain_predicates[g.name]:
+            print(f"Mismatch airty of predicate {g.name} in goal")
+
+
 if __name__ == '__main__':
+
     args = parse()
 
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
     
-    print(domain)
-    print(problem)
-    # # execute_actions(problem.init, domain.operators)
-    # print(problem.init)
-    # for o in domain.operators:
-    #     print(o)
+    if semantic_check(domain, problem):
+        print("semantic check failed!")
+
+
+
+    

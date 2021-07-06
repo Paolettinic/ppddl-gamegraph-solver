@@ -35,8 +35,8 @@ class Problem(object):
                     self._objects[obj.type] = self._objects.get(obj.type, [])
                     self._objects[obj.type].append(str(obj.value))
             elif k == "init":
-                self._init = set(map(str, d[k]))
-        self._goal = set(map(str, goal))
+                self._init = set(d[k])
+        self._goal = set(goal)
 
     @property
     def name(self):

@@ -193,7 +193,7 @@ def p_pddl(p):
 
 
 def p_domain(p):
-    '''domain : LPAREN DEFINE_KEY domain_def opt_dom_parts RPAREN''' #TODO: add functions_def
+    '''domain : LPAREN DEFINE_KEY domain_def opt_dom_parts RPAREN'''
     p[0] = Domain(p[3], p[4])
 
 
@@ -332,7 +332,7 @@ def p_function_def_list(p):
         p[0] = [p[1]] + p[2]
 
 def p_function_def(p):
-    '''function_def : LPAREN NAME VARIABLE HYPHEN type RPAREN
+    '''function_def : LPAREN NAME VARIABLE HYPHEN NAME RPAREN
                     | LPAREN NAME RPAREN'''
     if len(p) == 7:
         p[0] = Function(p[2],p[3],p[5])

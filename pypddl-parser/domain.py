@@ -18,7 +18,7 @@ class Domain(object):
     def __init__(   
                     self,
                     name,
-                    dom_opt_parts
+                    dom_opt_parts #TODO:switch to **kwargs
                 ):
         self._name = name
 

@@ -52,19 +52,71 @@ def parse():
     return parser.parse_args()
 
 def execute_actions(state, actions):
+    possible_path = {}
+    states_names = set()
+    # states_names.add([s.name for s in state])
+    for s in state:
+        states_names.add(s.name)
+    # print(states_names)
     for a in actions:
-        check = 0
+        check = True
+        # print(a.name)
+        prec_dic = {}
+        for param in a.params: #lista di literal -> predicate
+            print(param.name, param.type)
+            prec_dic[param.name] = {}
         for prec in a.preconditions:
-            p = str(prec)
-            if not p in state:
-                check = 1
-        if check == 0:
-            '''all conditions verified'''
-            print("verified")
-        else:
-            print("not verified")
-            check=0
+            # controllo il matching tra la lista dei parametri
+            pass
 
+
+
+            # if prec.predicate.name in states_names:
+            #     print(prec.predicate.name)
+            #     print(prec.predicate.args)
+            #     prec_dic[prec.predicate.name] = {}
+            #     print(type(prec.predicate))
+                # for arg in prec.predicate.args:
+                #     #Ceck matching arguments:
+                #     print(type(arg))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            # if not str(prec.predicate) in map(str,state):
+            #     check = False
+        # if check:
+        #     dl = []
+        #     add = []
+
+        #     #possiamo applicare l'azione
+        #     possible_path[a] = state.copy()
+            
+        #     for e in a.effects:
+        #         # print(type(e[1]))
+        #         if e[1].is_negative():
+        #             try:
+        #                 possible_path[a].remove(e[1])
+        #             except KeyError as k:
+        #                 pass
+
+        #         elif e[1].is_positive():
+        #             possible_path[a].add(e[1])
+        
+    # for a in possible_path:
+    #     print(f"{str(a)} => {list(map(str,possible_path[a]))}")
+           
 def semantic_check(domain, problem) :
     # check if predicates match with types
     domain_predicates = {}
@@ -101,6 +153,7 @@ def semantic_check(domain, problem) :
             return False
         elif not i.arity == domain_predicates[i.name]:
             print(f"Mismatch airty of predicate {i.name} in init")
+            return False
     #check goal predicates: name and airty
     for g in problem.goal:
         if not g.name in domain_predicates:
@@ -120,7 +173,8 @@ if __name__ == '__main__':
     
     if semantic_check(domain, problem):
         print("semantic check passed!")
-
+        s0 = problem.init
+        s = execute_actions(s0, domain.operators)
 
 
     

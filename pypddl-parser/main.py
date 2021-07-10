@@ -60,62 +60,40 @@ def execute_actions(state, actions):
     # print(states_names)
     for a in actions:
         check = True
-        # print(a.name)
+
+        print(f"_______{a.name}_________")
         prec_dic = {}
         for param in a.params: #lista di literal -> predicate
-            print(param.name, param.type)
-            prec_dic[param.name] = {}
-        for prec in a.preconditions:
+            #print(param.name, param.type)
+            prec_dic[param.name] = problem.objects[param.type]
+
+        for prec in a.preconditions: #prec type= literal
+            ari = prec.predicate.arity
             # controllo il matching tra la lista dei parametri
-            pass
-
-
-
-            # if prec.predicate.name in states_names:
-            #     print(prec.predicate.name)
-            #     print(prec.predicate.args)
-            #     prec_dic[prec.predicate.name] = {}
-            #     print(type(prec.predicate))
-                # for arg in prec.predicate.args:
-                #     #Ceck matching arguments:
-                #     print(type(arg))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            # if not str(prec.predicate) in map(str,state):
-            #     check = False
-        # if check:
-        #     dl = []
-        #     add = []
-
-        #     #possiamo applicare l'azione
-        #     possible_path[a] = state.copy()
+            pred_prec = prec.predicate
+            arity = pred_prec.arity
+            arguments = []
+            for i in range(arity):
+                arguments.append(prec_dic[pred_prec.args[i]][0])
             
-        #     for e in a.effects:
-        #         # print(type(e[1]))
-        #         if e[1].is_negative():
-        #             try:
-        #                 possible_path[a].remove(e[1])
-        #             except KeyError as k:
-        #                 pass
+            # provare funzione ricorsiva
 
-        #         elif e[1].is_positive():
-        #             possible_path[a].add(e[1])
+            print(arguments)
         
-    # for a in possible_path:
-    #     print(f"{str(a)} => {list(map(str,possible_path[a]))}")
+        
+
+            # for arg in prec.predicate.args:
+
+            #     Predicate(prec.predicate.name,[])
+
+
+            # literal.predicate _> predicate
+            # print(type(prec.predicate.args))
+            # for p_arg in prec.predicate.args:
+            #     print(type(p_arg))
+            #     break
+
+
            
 def semantic_check(domain, problem) :
     # check if predicates match with types
@@ -178,3 +156,8 @@ if __name__ == '__main__':
 
 
     
+
+
+
+
+

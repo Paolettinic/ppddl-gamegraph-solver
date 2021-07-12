@@ -69,7 +69,7 @@ class Problem(object):
         if self._objects:
             problem_str += '>> objects:\n'
             for type, objects in self._objects.items():
-                problem_str += '{0} -> {1}\n'.format(type, ', '.join(sorted(objects)))
-        problem_str += '>> init:\n{0}\n'.format(', '.join(sorted(self._init))) if self._init else ""
-        problem_str += '>> goal:\n{0}\n'.format(', '.join(sorted(self._goal)))
+                problem_str += '{0} -> {1}\n'.format(type, ', '.join(objects))
+        problem_str += '>> init:\n{0}\n'.format(', '.join(sorted(list(map(str,self._init))))) if self._init else ""
+        problem_str += '>> goal:\n{0}\n'.format(', '.join(sorted(list(map(str,self._goal)))))
         return problem_str

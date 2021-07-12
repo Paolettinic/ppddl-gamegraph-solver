@@ -15,10 +15,12 @@
 
 
 import argparse
+from ast import Index
+from os import stat
 from pddlparser import PDDLParser
 import networkx as nx
-
-
+import itertools
+from predicate import Predicate
 
 class Stato:
     def __init__(self,tipo, set) -> None:
@@ -51,55 +53,87 @@ def parse():
 
     return parser.parse_args()
 
-def execute_actions(state, actions):
-    possible_path = {}
-    states_names = set()
-    # states_names.add([s.name for s in state])
-    for s in state:
-        states_names.add(s.name)
-    # print(states_names)
+def check_action(sorted_preconditions):
+    pass
+
+def execute_actions(state, actions, predicates):
+    init = state.init
+    possible_path = {} 
+
     for a in actions:
-        check = True
 
         print(f"_______{a.name}_________")
-        prec_dic = {}
-        for param in a.params: #lista di literal -> predicate
-            #print(param.name, param.type)
-            prec_dic[param.name] = problem.objects[param.type]
+        params = {}
+        for par in a.params:
+            params[par.name] = None
 
-        for prec in a.preconditions: #prec type= literal
-            ari = prec.predicate.arity
-            # controllo il matching tra la lista dei parametri
-            pred_prec = prec.predicate
-            arity = pred_prec.arity
-            arguments = []
-            for i in range(arity):
-                arguments.append(prec_dic[pred_prec.args[i]][0])
+        sorted_preconditions = sorted(a.preconditions, key=lambda x: x.predicate.arity)
+        actuable = True
+        #s = {precondizione1: {arg1: [valori],arg2[valori]},precondizione2: {arg1: [valori],arg2[valori]}}  
+        s = {}
+        preconditions_dic = {}
+        index = 0
+        for p in sorted_preconditions: #TODO: put this into a function and return immediatly if not actuable
+            if actuable:
+                if p.predicate.arity == 0:
+                    actuable = p.predicate.name in map(str,init)
+                else:
+                    preconditions_dic[index] = p.predicate.name
+                    index+=1
+                    s[p.predicate.name] = {}
+                    for arg in p.predicate.args:
+                        s[p.predicate.name][arg] = []
+                    
+                    for pred in init:
+                        if p.predicate.name == pred.name:
+
+                            for j, term in enumerate(p.predicate.args):
+                                s[p.predicate.name][term].append(pred.args[j])
+        idx_row_prec = 0
+
+        for idx in range(len(preconditions_dic) - 1):
+            idx_row_next = 0
+            not_found = True
+            if not_found:
+                for arg in s[preconditions_dic[idx]]:
+                    if not_found:
+                        for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
+                            if s[preconditions_dic[idx]][arg][i].value in map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg]):
+                                not_found = False
+                                idx_row_next = list(map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg])).index(s[preconditions_dic[idx]][arg][i].value)
+                                idx_row_prec = i
+                                #
+                                if len(s[preconditions_dic[idx]]) < len(s[preconditions_dic[idx + 1]]):
+                                    for matched_arg in s[preconditions_dic[idx + 1]]:
+                                        params[matched_arg] = s[preconditions_dic[idx + 1]][matched_arg][idx_row_next].value
+                                else:
+                                    params[arg] = s[preconditions_dic[idx]][arg][i].value
+                    else:       
+                        if s[preconditions_dic[idx]][arg][idx_row_prec] == s[preconditions_dic[idx+1]][arg][idx_row_next]:
+                            params[par.name] = s[preconditions_dic[idx]][arg][idx_row_prec].value
+                        else:
+                            for par in a.params:
+                                params[par.name] = None
+                            not_found = True
+        # print(params)
+        azione_applicabile = True
+
+        for p in params:
+            if not params[p]:
+                azione_applicabile = False
+
+        if azione_applicabile:
+            # resulting state
+            pass    
+
+    return possible_path
+
             
-            # provare funzione ricorsiva
-
-            print(arguments)
-        
-        
-
-            # for arg in prec.predicate.args:
-
-            #     Predicate(prec.predicate.name,[])
-
-
-            # literal.predicate _> predicate
-            # print(type(prec.predicate.args))
-            # for p_arg in prec.predicate.args:
-            #     print(type(p_arg))
-            #     break
-
-
            
 def semantic_check(domain, problem) :
     # check if predicates match with types
     domain_predicates = {}
 
-        
     for p in domain.predicates:
         domain_predicates[p.name] = p.arity
         for t in p.args:
@@ -140,6 +174,8 @@ def semantic_check(domain, problem) :
         elif not g.arity == domain_predicates[g.name]:
             print(f"Mismatch airty of predicate {g.name} in goal")
             return False
+
+    #TODO: check if init args are defined in object
     return True
 
 if __name__ == '__main__':
@@ -149,10 +185,12 @@ if __name__ == '__main__':
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
     
+    # print(domain)
+    # print(problem)
     if semantic_check(domain, problem):
         print("semantic check passed!")
-        s0 = problem.init
-        s = execute_actions(s0, domain.operators)
+
+        s = execute_actions(problem, domain.operators, domain.predicates)
 
 
     
@@ -160,4 +198,9 @@ if __name__ == '__main__':
 
 
 
-
+##            if actuable:
+#               
+#                else:
+#                    for arg in p.args:
+#                        if arg in params:
+#

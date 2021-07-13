@@ -55,7 +55,8 @@ def parse():
 
     return parser.parse_args()
 
-def execute_actions(state, actions, predicates):
+def execute_actions(state, actions, predicates): 
+    #TODO: add multiple actions: move(x1,x2), move(x1,x3) are both valid!
     init = state.init
 
     possible_path = {} #{action -> Action : stato_finale -> list(Predicates)}
@@ -227,11 +228,4 @@ if __name__ == '__main__':
     if semantic_check(domain, problem):
         print("semantic check passed!")
 
-        # s = execute_actions(problem, domain.operators, domain.predicates)
-        pred = Predicate("road",[Term.constant("x01y01"),Term.constant("x01y03")])
-        print(pred in problem.init)#(road x01y01 x01y03)
-        for i in problem.init:
-            print(i.args[0].value)
-            print(i.args[0].type)
-            print(i.args[0].name)
-            break
+        s = execute_actions(problem, domain.operators, domain.predicates)

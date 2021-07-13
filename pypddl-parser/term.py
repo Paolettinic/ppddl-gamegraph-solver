@@ -59,3 +59,10 @@ class Term(object):
             return '{0} - {1}'.format(self._value, self._type)
         if self.is_constant():
             return '{0}'.format(self._value)
+
+    def __eq__(self, other):
+        return self.name == other.name and \
+            self.type == other.type and \
+            self.value == other.value
+    def __hash__(self):
+        return hash((self.name,self.type,self.value))

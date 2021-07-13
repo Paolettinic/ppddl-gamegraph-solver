@@ -41,7 +41,7 @@ class Predicate(object):
         return hash(
             (
                 self.name,
-                str(map(lambda x : x.value ,self.args))
+                str(list(map(str,self.args)))
             )
         )
 

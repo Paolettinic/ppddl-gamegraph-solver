@@ -21,6 +21,8 @@ from pddlparser import PDDLParser
 import networkx as nx
 import itertools
 from predicate import Predicate
+from literal import Literal
+from term import Term
 
 class Stato:
     def __init__(self,tipo, set) -> None:
@@ -53,12 +55,10 @@ def parse():
 
     return parser.parse_args()
 
-def check_action(sorted_preconditions):
-    pass
-
 def execute_actions(state, actions, predicates):
     init = state.init
-    possible_path = {} 
+
+    possible_path = {} #{action -> Action : stato_finale -> list(Predicates)}
 
     for a in actions:
 
@@ -129,13 +129,40 @@ def execute_actions(state, actions, predicates):
             for p in params:
                 if not params[p]: valid_action = False
             if not not_found and valid_action:
+                new_state = init.copy()
                 for e in a.effects:
-                    print(e)
-        else:
-            if actuable:
-                for e in a.effects:
-                    print(e)
+                    # print(type(e[1])) #TODO: actions execution
+                    # Vedere se l'effetto è positivo o negativo
+                    # rimuovere i neg. e aggiungere i positivi
+                    # init.add(list(Predicates))
+                    if e[0] == 1.0: # non probabilistico
+                        args = []
+                        for p in e[1].predicate.args:
+                            args.append(Term.constant(params[p]))
+                        # print(e[1].is_positive())
+                        if e[1].is_positive():
+                            print(f"added {e[1].predicate.name} -> {list(map(str,args))}")
+                            new_state.add(Predicate(e[1].predicate.name, args))
+                            print(list(map(str,new_state)))
+                        else:
+                            print(f"removed {e[1].predicate.name} -> {list(map(str,args))}")
+                           
+                            new_state.remove(Predicate(e[1].predicate.name, args))
 
+
+        # else:
+        #     if actuable:
+        #         for e in a.effects:
+        #             print(e) #TODO: actions execution
+
+        print(list(map(str,new_state)))
+        print(params)
+
+        a1 = Predicate("test",[0]) 
+        a2 = Predicate("test",[0])
+        # print("a1 == a2", a1 == a2)
+
+        break 
     return possible_path
 
             
@@ -200,6 +227,11 @@ if __name__ == '__main__':
     if semantic_check(domain, problem):
         print("semantic check passed!")
 
-        s = execute_actions(problem, domain.operators, domain.predicates)
-
-
+        # s = execute_actions(problem, domain.operators, domain.predicates)
+        pred = Predicate("road",[Term.constant("x01y01"),Term.constant("x01y03")])
+        print(pred in problem.init)#(road x01y01 x01y03)
+        for i in problem.init:
+            print(i.args[0].value)
+            print(i.args[0].type)
+            print(i.args[0].name)
+            break

@@ -34,6 +34,18 @@ class Predicate(object):
     def arity(self):
         return len(self._args)
 
+    def __eq__(self, other):
+         return self.name == other.name and self.args == other.args
+
+    def __hash__(self):
+        return hash(
+            (
+                self.name,
+                str(map(lambda x : x.value ,self.args))
+            )
+        )
+
+
     def __str__(self):
         if self._name == '=':
             return '{0} = {1}'.format(str(self._args[0]), str(self._args[1]))

@@ -77,6 +77,9 @@ def execute_actions(state, actions, predicates):
             if actuable:
                 if p.predicate.arity == 0:
                     actuable = p.predicate.name in map(str,init)
+                    s[p.predicate.name] = {}
+                    preconditions_dic[index] = p.predicate.name
+                    index += 1
                 else:
                     preconditions_dic[index] = p.predicate.name
                     index+=1
@@ -90,41 +93,48 @@ def execute_actions(state, actions, predicates):
                             for j, term in enumerate(p.predicate.args):
                                 s[p.predicate.name][term].append(pred.args[j])
         idx_row_prec = 0
-
-        for idx in range(len(preconditions_dic) - 1):
-            idx_row_next = 0
-            not_found = True
-            if not_found:
-                for arg in s[preconditions_dic[idx]]:
-                    if not_found:
-                        for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
-                            if s[preconditions_dic[idx]][arg][i].value in map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg]):
-                                not_found = False
-                                idx_row_next = list(map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg])).index(s[preconditions_dic[idx]][arg][i].value)
-                                idx_row_prec = i
-                                #
-                                if len(s[preconditions_dic[idx]]) < len(s[preconditions_dic[idx + 1]]):
-                                    for matched_arg in s[preconditions_dic[idx + 1]]:
-                                        params[matched_arg] = s[preconditions_dic[idx + 1]][matched_arg][idx_row_next].value
-                                else:
-                                    params[arg] = s[preconditions_dic[idx]][arg][i].value
-                    else:       
-                        if s[preconditions_dic[idx]][arg][idx_row_prec] == s[preconditions_dic[idx+1]][arg][idx_row_next]:
-                            params[par.name] = s[preconditions_dic[idx]][arg][idx_row_prec].value
-                        else:
-                            for par in a.params:
-                                params[par.name] = None
-                            not_found = True
-        # print(params)
-        azione_applicabile = True
-
-        for p in params:
-            if not params[p]:
-                azione_applicabile = False
-
-        if azione_applicabile:
-            # resulting state
-            pass    
+        if len(preconditions_dic) - 1 > 0 : #TODO: add actuable check
+            for idx in range(len(preconditions_dic) - 1):
+                idx_row_next = 0
+                not_found = True
+                if not_found:
+                    for arg in s[preconditions_dic[idx]]:
+                        if not_found:
+                            for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
+                                if s[preconditions_dic[idx]][arg][i].value in map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg]):
+                                    not_found = False
+                                    idx_row_next = list(map(
+                                        lambda x : x.value,
+                                        s[preconditions_dic[idx + 1]][arg])
+                                        ).index(
+                                            s[preconditions_dic[idx]][arg][i].value
+                                        )
+                                    idx_row_prec = i
+                                    #
+                                    if len(s[preconditions_dic[idx]]) < len(s[preconditions_dic[idx + 1]]):
+                                        for matched_arg in s[preconditions_dic[idx + 1]]:
+                                            params[matched_arg] = s[preconditions_dic[idx + 1]][matched_arg][idx_row_next].value
+                                    else:
+                                        params[arg] = s[preconditions_dic[idx]][arg][i].value
+                        else:       
+                            if s[preconditions_dic[idx]][arg][idx_row_prec] == s[preconditions_dic[idx+1]][arg][idx_row_next]:
+                                params[par.name] = s[preconditions_dic[idx]][arg][idx_row_prec].value
+                            else:
+                                for par in a.params:
+                                    params[par.name] = None
+                                not_found = True
+        #TODO: check for actions with parameters not used in preconditions (if it's a correctly defined FOND problem)
+        if len(params) > 0:
+            valid_action = True
+            for p in params:
+                if not params[p]: valid_action = False
+            if not not_found and valid_action:
+                for e in a.effects:
+                    print(e)
+        else:
+            if actuable:
+                for e in a.effects:
+                    print(e)
 
     return possible_path
 
@@ -193,14 +203,3 @@ if __name__ == '__main__':
         s = execute_actions(problem, domain.operators, domain.predicates)
 
 
-    
-
-
-
-
-##            if actuable:
-#               
-#                else:
-#                    for arg in p.args:
-#                        if arg in params:
-#

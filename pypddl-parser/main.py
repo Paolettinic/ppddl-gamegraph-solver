@@ -55,7 +55,7 @@ def parse():
 
     return parser.parse_args()
 
-def execute_actions(state, actions, predicates): 
+def get_possible_paths(state, actions, predicates): 
     #TODO: add multiple actions: move(x1,x2), move(x1,x3) are both valid!
     init = state.init
 
@@ -63,7 +63,7 @@ def execute_actions(state, actions, predicates):
 
     for a in actions:
 
-        print(f"_______{a.name}_________")
+        # print(f"_______{a.name}_________")
         params = {}
         for par in a.params:
             params[par.name] = None
@@ -98,7 +98,7 @@ def execute_actions(state, actions, predicates):
             for idx in range(len(preconditions_dic) - 1):
                 idx_row_next = 0
                 not_found = True
-                if not_found:
+                if not_found: #commentare
                     for arg in s[preconditions_dic[idx]]:
                         if not_found:
                             for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
@@ -142,13 +142,14 @@ def execute_actions(state, actions, predicates):
                             args.append(Term.constant(params[p]))
                         # print(e[1].is_positive())
                         if e[1].is_positive():
-                            print(f"added {e[1].predicate.name} -> {list(map(str,args))}")
+                            # print(f"added {e[1].predicate.name} -> {list(map(str,args))}")
                             new_state.add(Predicate(e[1].predicate.name, args))
-                            print(list(map(str,new_state)))
+                            # print(list(map(str,new_state)))
                         else:
-                            print(f"removed {e[1].predicate.name} -> {list(map(str,args))}")
+                            # print(f"removed {e[1].predicate.name} -> {list(map(str,args))}")
                            
                             new_state.remove(Predicate(e[1].predicate.name, args))
+                possible_path[a] = new_state
 
 
         # else:
@@ -156,14 +157,12 @@ def execute_actions(state, actions, predicates):
         #         for e in a.effects:
         #             print(e) #TODO: actions execution
 
-        print(list(map(str,new_state)))
-        print(params)
+        # print(list(map(str,new_state))) #stato corrente
+        # print(params)
 
-        a1 = Predicate("test",[0]) 
-        a2 = Predicate("test",[0])
-        # print("a1 == a2", a1 == a2)
+        
+        
 
-        break 
     return possible_path
 
             
@@ -215,6 +214,7 @@ def semantic_check(domain, problem) :
 
     #TODO: check if init args are defined in object
     return True
+# class State:
 
 if __name__ == '__main__':
 
@@ -222,10 +222,26 @@ if __name__ == '__main__':
 
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
-    
-    # print(domain)
-    # print(problem)
+
     if semantic_check(domain, problem):
         print("semantic check passed!")
+        #problem.init -> stato iniziale -> a1, a2, a3 
+        s = get_possible_paths(problem, domain.operators, domain.predicates) # {action: [stato = set()]}
+        node_idx = 0
+        G = nx.Graph()
+        G.add_node(1, state = problem.init)
+        # node_idx += 1
+        # for a in s:
+        #     G.add_node(f"tuple(s[a]) {a.name}")
+        #     node_idx += 1
 
-        s = execute_actions(problem, domain.operators, domain.predicates)
+        # print(G.number_of_nodes())
+        # for i in G.nodes.items():
+        #     print(i)
+        G.add_node(2, state = "bello")
+        # G.add_edge("ciao","bello")
+        print(list(map(str,G.nodes[1]['state'])))
+        
+
+#move-to(a,b) -> stato1
+#move-to(a-c) -> stato2

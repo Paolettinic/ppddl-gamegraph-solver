@@ -15,35 +15,13 @@
 
 
 import argparse
-from ast import Index
-from os import stat
+
 from pddlparser import PDDLParser
 import networkx as nx
-import itertools
 from predicate import Predicate
-from literal import Literal
 from term import Term
+import matplotlib.pyplot as plt
 
-class Stato:
-    def __init__(self,tipo, set) -> None:
-        self._type = tipo
-        self._set = set
-        self._value = 0
-    
-    @property
-    def type(self):
-        return self._type
-    @property
-    def set(self):
-        return self._set
-    @property
-    def value(self):
-        return self._value
-    
-    def __str__(self):
-        str = f"Tipo:\t\t{self._type}\n"
-        str += f"Set:\t\t{self._set}"
-        return str
 
 def parse():
     usage = 'python3 main.py <DOMAIN> <INSTANCE>'
@@ -55,112 +33,144 @@ def parse():
 
     return parser.parse_args()
 
-def get_possible_paths(state, actions, predicates): 
+def find_all(element, array):
+    return [i for i, x in enumerate(array) if x == element]
+
+def is_sub_dictionary(dictionary1, dictionary2):
+    matching = True
+    assert len(dictionary1) <= len(dictionary2)
+    for key in dictionary1:
+        if matching:
+            if key in dictionary2:
+                matching = dictionary1[key] == dictionary2[key]
+            else:
+                return False
+    return matching
+
+def same_dictionary_different_values(dictionary1,dictionary2):
+    if not len(dictionary1) == len(dictionary2): return False
+    for key in dictionary1:
+        if not key in dictionary2:
+            return False
+        else:
+            if dictionary1[key] == dictionary2[key]:
+                return False
+    return True
+        
+
+def has_no_common_keys(dictionary1, dictionary2):
+    for key in dictionary1:
+        if key in dictionary2:
+            return False
+    return True
+
+def get_possible_paths(init, actions): 
     #TODO: add multiple actions: move(x1,x2), move(x1,x3) are both valid!
-    init = state.init
+    # init = state.init
 
     possible_path = {} #{action -> Action : stato_finale -> list(Predicates)}
 
     for a in actions:
 
-        # print(f"_______{a.name}_________")
+        print(f"_______{a.name}_________")
         params = {}
         for par in a.params:
-            params[par.name] = None
+            params[par.name] = []
 
         sorted_preconditions = sorted(a.preconditions, key=lambda x: x.predicate.arity)
         actuable = True
+        has_singular_term = False
         #s = {precondizione1: {arg1: [valori],arg2[valori]},precondizione2: {arg1: [valori],arg2[valori]}}  
         s = {}
-        preconditions_dic = {}
-        index = 0
-        for p in sorted_preconditions: #TODO: put this into a function and return immediatly if not actuable
+
+        for p in sorted_preconditions: #TODO: put this into a function and return immediately if not actuable
             if actuable:
                 if p.predicate.arity == 0:
+                    has_singular_term = True
                     actuable = p.predicate.name in map(str,init)
                     s[p.predicate.name] = {}
-                    preconditions_dic[index] = p.predicate.name
-                    index += 1
-                else:
-                    preconditions_dic[index] = p.predicate.name
-                    index+=1
-                    s[p.predicate.name] = {}
-                    for arg in p.predicate.args:
-                        s[p.predicate.name][arg] = []
                     
+                else:
+                    
+                    s[p.predicate.name] = []
+
                     for pred in init:
                         if p.predicate.name == pred.name:
 
-                            for j, term in enumerate(p.predicate.args):
-                                s[p.predicate.name][term].append(pred.args[j])
-        idx_row_prec = 0
-        if len(preconditions_dic) - 1 > 0 : #TODO: add actuable check
-            for idx in range(len(preconditions_dic) - 1):
-                idx_row_next = 0
-                not_found = True
-                if not_found: #commentare
-                    for arg in s[preconditions_dic[idx]]:
-                        if not_found:
-                            for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
-                                if s[preconditions_dic[idx]][arg][i].value in map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg]):
-                                    not_found = False
-                                    idx_row_next = list(map(
-                                        lambda x : x.value,
-                                        s[preconditions_dic[idx + 1]][arg])
-                                        ).index(
-                                            s[preconditions_dic[idx]][arg][i].value
-                                        )
-                                    idx_row_prec = i
-                                    #
-                                    if len(s[preconditions_dic[idx]]) < len(s[preconditions_dic[idx + 1]]):
-                                        for matched_arg in s[preconditions_dic[idx + 1]]:
-                                            params[matched_arg] = s[preconditions_dic[idx + 1]][matched_arg][idx_row_next].value
+                            s[p.predicate.name] += [dict(zip(p.predicate.args,pred.args))]
+       
+        possible_parameters = []
+
+        if actuable:
+            for prec in s: #v-at road
+                if len(s[prec]) > 0: # not-flattire 
+                    if len(possible_parameters) > 0:
+                        if not has_no_common_keys(s[prec][0],possible_parameters[0]):
+                            to_remove = []
+                            to_add = []
+                            for prec_params in s[prec]: #{?from: value ?to: value}
+                                for item in possible_parameters:   
+                                    if is_sub_dictionary(item,prec_params):
+                                        if not item in to_remove:
+                                            to_remove.append(item) 
+                                        if not prec_params in to_add:
+                                            to_add.append(prec_params)
                                     else:
-                                        params[arg] = s[preconditions_dic[idx]][arg][i].value
-                        else:       
-                            if s[preconditions_dic[idx]][arg][idx_row_prec] == s[preconditions_dic[idx+1]][arg][idx_row_next]:
-                                params[par.name] = s[preconditions_dic[idx]][arg][idx_row_prec].value
-                            else:
-                                for par in a.params:
-                                    params[par.name] = None
-                                not_found = True
-        #TODO: check for actions with parameters not used in preconditions (if it's a correctly defined FOND problem)
-        if len(params) > 0:
-            valid_action = True
-            for p in params:
-                if not params[p]: valid_action = False
-            if not not_found and valid_action:
-                new_state = init.copy()
-                for e in a.effects:
-                    # print(type(e[1])) #TODO: actions execution
-                    # Vedere se l'effetto è positivo o negativo
-                    # rimuovere i neg. e aggiungere i positivi
-                    # init.add(list(Predicates))
-                    if e[0] == 1.0: # non probabilistico
-                        args = []
-                        for p in e[1].predicate.args:
-                            args.append(Term.constant(params[p]))
-                        # print(e[1].is_positive())
-                        if e[1].is_positive():
-                            # print(f"added {e[1].predicate.name} -> {list(map(str,args))}")
-                            new_state.add(Predicate(e[1].predicate.name, args))
-                            # print(list(map(str,new_state)))
-                        else:
-                            # print(f"removed {e[1].predicate.name} -> {list(map(str,args))}")
-                           
-                            new_state.remove(Predicate(e[1].predicate.name, args))
-                possible_path[a] = new_state
-
-
-        # else:
-        #     if actuable:
-        #         for e in a.effects:
-        #             print(e) #TODO: actions execution
-
-        # print(list(map(str,new_state))) #stato corrente
-        # print(params)
-
+                                        if same_dictionary_different_values(item,prec_params):
+                                            print("same_dictionary_different_values")
+                                            if not item in to_remove:
+                                                to_remove.append(item)
+                            for i in to_remove:
+                                possible_parameters.remove(i)
+                            for i in to_add:
+                                possible_parameters.append(i)
+                        else: # add all possible values to each dictionary in possible parameters
+                            for item in possible_parameters:
+                                for new_items in s[prec]:
+                                    item.update(new_items)
+                    else:
+                        possible_parameters += [x for x in s[prec]]
+                        
         
+            # for p in possible_parameters:
+            #     for arg in p:
+            #         print(arg,"\t",str(p[arg]))
+            print(possible_parameters)
+            if len(possible_parameters) > 0:
+                for p_p in possible_parameters: #TODO: controllare se i possible parameters sono corretti
+                #     # print(p_p) -> {"from": val, "to": val}
+
+                    new_state = init.copy()
+                    
+                    for e in a.effects:
+
+                        if e[0] == 1.0: # non probabilistico
+                            arguments = []
+                            for p in e[1].predicate.args:
+                                arguments.append(Term.constant(p_p[p].value))
+                            
+                            if e[1].is_positive():
+                                new_state.add(Predicate(e[1].predicate.name, arguments))
+                            else:
+                                new_state.remove(Predicate(e[1].predicate.name, arguments))
+
+                    possible_path[f"{a.name}({str({k : v.value for k,v in p_p.items()})})"] = new_state
+            else:
+                if len(a.params) == 0 and has_singular_term and actuable:
+                    new_state = init.copy()
+                    for e in a.effects:
+
+                        if e[0] == 1.0: # non probabilistico
+                            
+                            if e[1].is_positive():
+                                new_state.add(Predicate(e[1].predicate.name))
+                            else:
+                                new_state.remove(Predicate(e[1].predicate.name))
+                    possible_path[f"{a.name}"] = new_state
+
+        print(possible_path)
+
+
         
 
     return possible_path
@@ -216,32 +226,117 @@ def semantic_check(domain, problem) :
     return True
 # class State:
 
+
+def create_graph( graph : nx.Graph, actions, current, current_index, to_be_visited, visited): #graph [0] -> init , to_be_visited [init]
+    if len(to_be_visited) > 0:
+        neighbors = get_possible_paths(current, actions) #[{action: state}]
+        previous = current_index
+        new_index = current_index
+        for act in neighbors:
+            new_state = neighbors[act]
+            if not new_state in visited:
+                new_index += 1
+                graph.add_node(new_index, state = new_state)
+                graph.add_edges_from( [(previous ,new_index, {"action": act})] )
+                to_be_visited.append(new_index)
+            else:
+                pass #collegare con nodo già visitato
+
+        current_index = to_be_visited.pop()
+        current = graph.nodes[current_index]['state']
+        visited.append(current_index)
+
+        return create_graph(graph,actions,current,current_index,to_be_visited,visited)
+    else:
+        return graph
+
 if __name__ == '__main__':
 
     args = parse()
 
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
+    get_possible_paths(problem.init, domain.operators)
+    # if semantic_check(domain, problem):
+    #     print("semantic check passed!")
+    #     #problem.init -> stato iniziale -> a1, a2, a3 
+    #     to_be_visited = []
 
-    if semantic_check(domain, problem):
-        print("semantic check passed!")
-        #problem.init -> stato iniziale -> a1, a2, a3 
-        s = get_possible_paths(problem, domain.operators, domain.predicates) # {action: [stato = set()]}
-        node_idx = 0
-        G = nx.Graph()
-        G.add_node(1, state = problem.init)
-        # node_idx += 1
-        # for a in s:
-        #     G.add_node(f"tuple(s[a]) {a.name}")
-        #     node_idx += 1
-
-        # print(G.number_of_nodes())
-        # for i in G.nodes.items():
-        #     print(i)
-        G.add_node(2, state = "bello")
-        # G.add_edge("ciao","bello")
-        print(list(map(str,G.nodes[1]['state'])))
+    #     node_idx = 0
+    #     G = nx.Graph()
+    #     G.add_node(node_idx, state = problem.init)
+    #     to_be_visited.append(node_idx)
+    #     visited_nodes = []
+    #     visited_nodes.append(problem.init)
+    #     g = create_graph( G, domain.operators, problem.init, node_idx, to_be_visited, visited_nodes)
         
+    #     nx.draw(g, with_labels=True, font_weight='bold')
 
-#move-to(a,b) -> stato1
-#move-to(a-c) -> stato2
+        # current_node = to_be_visited.pop()
+        # s = get_possible_paths(G[current_node]["state"], domain.operators)
+        # for action in s:
+        #     G.add_node(node_idx, state = s[action])
+        #     G.add_edge((current_node,node_idx,{"action": action }))
+        #     node_idx += 1
+        # while len(to_be_visited) > 0:
+            
+
+
+
+"""
+procedure DFS_iterative(G, v) is
+    let S be a stack
+    S.push(iterator of G.adjacentEdges(v))
+    while S is not empty do
+        if S.peek().hasNext() then
+            w = S.peek().next()
+            if w is not labeled as discovered then
+                label w as discovered
+                S.push(iterator of G.adjacentEdges(w))
+        else
+            S.pop() 
+"""
+
+
+# idx_row_prec = 0
+# if len(preconditions_dic) - 1 > 0 : #TODO: add actuable check
+#     for idx in range(len(preconditions_dic) - 1): #precondition_dic {0:precodition1, 1:precondition2 ...}
+#         idx_row_next = 0
+#         not_found = True
+#         # if not_found: #commentare
+#         for arg in s[preconditions_dic[idx]]: #per ogni singola precondizione
+#             if not_found:
+#                 for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
+#                     if s[preconditions_dic[idx]][arg][i].value in map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg]):
+#                         not_found = False
+#                         idx_row_next = list(map(
+#                             lambda x : x.value,
+#                             s[preconditions_dic[idx + 1]][arg])
+#                             ).index(
+#                                 s[preconditions_dic[idx]][arg][i].value
+#                             )
+#                         idx_row_prec = i
+#                         #
+#                         if len(s[preconditions_dic[idx]]) < len(s[preconditions_dic[idx + 1]]):
+#                             for matched_arg in s[preconditions_dic[idx + 1]]:
+#                                 params[matched_arg].append(s[preconditions_dic[idx + 1]][matched_arg][idx_row_next].value)
+#                         else:
+#                             params[arg].append(s[preconditions_dic[idx]][arg][i].value)
+#             else:       
+#                 if s[preconditions_dic[idx]][arg][idx_row_prec] == s[preconditions_dic[idx+1]][arg][idx_row_next]:
+#                     params[par.name].append(s[preconditions_dic[idx]][arg][idx_row_prec].value)
+#                 else:
+#                     for par in a.params:
+#                         params[par.name] = None
+#                     not_found = True
+
+
+
+# else:
+#     if actuable:
+#         for e in a.effects:
+#             print(e) #TODO: actions execution
+
+# print(list(map(str,new_state))) #stato corrente
+# print(params)
+

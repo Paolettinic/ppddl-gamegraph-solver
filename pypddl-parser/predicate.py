@@ -35,7 +35,9 @@ class Predicate(object):
         return len(self._args)
 
     def __eq__(self, other):
-         return self.name == other.name and self.args == other.args
+        return self.name == other.name and self.args == other.args
+
+        
 
     def __hash__(self):
         return hash(

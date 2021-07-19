@@ -37,6 +37,13 @@ class Action(object):
     @property
     def effects(self):
         return self._effects[:]
+    
+    @property
+    def is_probabilistic(self):
+        for e in self.effects:
+            if e[0] < 1.0:
+                return True
+        return False
 
     def __str__(self):
         operator_str  = '{0}({1})\n'.format(self._name, ', '.join(map(str, self._params)))

@@ -47,8 +47,8 @@ class Term(object):
         return Term(name=name, type=type)
 
     @classmethod
-    def constant(cls, value, type=None):
-        return Term(value=value, type=type)
+    def constant(cls, val, type=None):
+        return Term(value=val, type=type)
 
     def __str__(self):
         if self.is_variable() and self.is_typed():
@@ -61,8 +61,6 @@ class Term(object):
             return '{0}'.format(self._value)
 
     def __eq__(self, other):
-        return self.name == other.name and \
-            self.type == other.type and \
-            self.value == other.value
+        return self.name == other.name and self.type == other.type and self.value == other.value
     def __hash__(self):
         return hash((self.name,self.type,self.value))

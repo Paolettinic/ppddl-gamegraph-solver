@@ -117,7 +117,6 @@ def get_possible_paths(init, actions):
                                             to_add.append(prec_params)
                                     else:
                                         if same_dictionary_different_values(item,prec_params):
-                                            print("same_dictionary_different_values")
                                             if not item in to_remove:
                                                 to_remove.append(item)
                             for i in to_remove:
@@ -139,7 +138,7 @@ def get_possible_paths(init, actions):
             if len(possible_parameters) > 0:
                 for p_p in possible_parameters: #TODO: controllare se i possible parameters sono corretti
                 #     # print(p_p) -> {"from": val, "to": val}
-
+                    probabilistic_new_states = []
                     new_state = init.copy()
                     
                     for e in a.effects:
@@ -153,6 +152,17 @@ def get_possible_paths(init, actions):
                                 new_state.add(Predicate(e[1].predicate.name, arguments))
                             else:
                                 new_state.remove(Predicate(e[1].predicate.name, arguments))
+                        else: 
+                            prob = new_state.copy()
+                            arguments = []
+                            for p in e[1].predicate.args:
+                                arguments.append(Term.constant(p_p[p].value))
+                            
+                            if e[1].is_positive():
+                                new_state.add(Predicate(e[1].predicate.name, arguments))
+                            else:
+                                new_state.remove(Predicate(e[1].predicate.name, arguments))
+                            
 
                     possible_path[f"{a.name}({str({k : v.value for k,v in p_p.items()})})"] = new_state
             else:
@@ -168,7 +178,7 @@ def get_possible_paths(init, actions):
                                 new_state.remove(Predicate(e[1].predicate.name))
                     possible_path[f"{a.name}"] = new_state
 
-        print(possible_path)
+        # print(possible_path)
 
 
         

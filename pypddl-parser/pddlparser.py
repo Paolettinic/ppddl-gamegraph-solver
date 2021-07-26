@@ -381,14 +381,27 @@ def p_precond_def(p):
         p[0] = p[4]
 
 
-def p_effects_def(p):
-    '''effects_def : EFFECT_KEY LPAREN AND_KEY effects_lst RPAREN
-                   | EFFECT_KEY effect'''
-    if len(p) == 3:
-        p[0] = [p[2]]
-    elif len(p) == 6:
-        p[0] = p[4]
+# def p_effects_def(p):
+#     '''effects_def : EFFECT_KEY LPAREN AND_KEY effects_lst RPAREN
+#                    | EFFECT_KEY effect'''
+#     if len(p) == 3:
+#         p[0] = [p[2]]
+#     elif len(p) == 6:
+#         p[0] = p[4]
 
+
+def p_effects_def(p):
+    '''effects_def : EFFECT_KEY effects'''
+    p[0] = p[2]
+
+
+def p_effects(p):
+    '''effects : effect
+               | LPAREN AND_KEY effects_lst RPAREN'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    elif len(p) == 5:
+        p[0] = p[3]
 
 def p_effects_lst(p):
     '''effects_lst : effect effects_lst
@@ -398,15 +411,21 @@ def p_effects_lst(p):
     elif len(p) == 3:
         p[0] = [p[1]] + p[2]
 
-
 def p_effect(p):
     '''effect : literal
-              | LPAREN PROBABILISTIC_KEY PROBABILITY literal RPAREN'''
+              | LPAREN PROBABILISTIC_KEY probability_list RPAREN'''
     if len(p) == 2:
         p[0] = (1.0, p[1])
-    elif len(p) == 6:
-        p[0] = (p[3], p[4])
+    elif len(p) == 5:
+        p[0] = p[3]
 
+def p_probability_list(p):
+    '''probability_list : PROBABILITY effects
+                        | PROBABILITY effects probability_list'''
+    if len(p) == 3:
+        p[0] = (p[1],p[2])
+    elif len(p) == 4:
+        p[0] = [(p[1],p[2])] + [p[3]]
 
 def p_literals_lst(p):
     '''literals_lst : literal literals_lst

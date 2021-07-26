@@ -20,7 +20,24 @@ class Action(object):
         self._name    = name
         self._params  = params
         self._precond = precond
-        self._effects = effects
+        self._effects = self.compute_probability(effects)
+
+
+    def compute_probability(self, effects):
+        print(effects)
+        final = []
+        for e in effects:
+            if isinstance(e,tuple):
+                p, effect = e
+                if not isinstance(effect, list):
+                    final.append(e)   
+                else:
+                    final += [(p*sub_p, sub_e) for sub_p, sub_e in self.compute_probability(effect)]
+            elif isinstance(e,list):
+                for p, effect in e:
+                    final += [(p*sub_p, sub_e) for sub_p, sub_e in self.compute_probability(effect)]
+        return final   
+
 
     @property
     def name(self):
@@ -37,7 +54,8 @@ class Action(object):
     @property
     def effects(self):
         return self._effects[:]
-    
+    #TODO: separare effetti probabilistici da effetti non probabilistici
+
     @property
     def is_probabilistic(self):
         for e in self.effects:

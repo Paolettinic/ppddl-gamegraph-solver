@@ -64,6 +64,21 @@ def has_no_common_keys(dictionary1, dictionary2):
             return False
     return True
 
+def apply_effects(current_state,effect):
+    arguments = []
+    new_state = current_state.copy()
+
+    for p in effect.predicate.args:
+        arguments.append(Term.constant(p.value))
+
+    if effect.is_positive():
+        new_state.add(Predicate(effect.predicate.name, arguments))
+    else:
+        new_state.remove(Predicate(effect.predicate.name, arguments))
+    
+    return new_state
+
+
 def get_possible_paths(init, actions): 
     #TODO: add multiple actions: move(x1,x2), move(x1,x3) are both valid!
     # init = state.init
@@ -134,48 +149,54 @@ def get_possible_paths(init, actions):
             # for p in possible_parameters:
             #     for arg in p:
             #         print(arg,"\t",str(p[arg]))
-            print(possible_parameters)
+            
             if len(possible_parameters) > 0:
                 for p_p in possible_parameters: #TODO: controllare se i possible parameters sono corretti
                 #     # print(p_p) -> {"from": val, "to": val}
                     probabilistic_new_states = []
                     new_state = init.copy()
-                    
+                    probabilistic_new_states.append(new_state.copy())
+
+
                     for e in a.effects:
+                        print(e)
+                        # if p == 1.0: # non probabilistico
+                        #     for p_n_s in probabilistic_new_states:
+                        #         arguments = []
 
-                        if e[0] == 1.0: # non probabilistico
-                            arguments = []
-                            for p in e[1].predicate.args:
-                                arguments.append(Term.constant(p_p[p].value))
+                        #         # for p in e.predicate.args:
+                        #         #     arguments.append(Term.constant(p_p[p].value))
+
+                        #         # if e.is_positive():
+                        #         #     p_n_s.add(Predicate(e.predicate.name, arguments))
+                        #         # else:
+                        #         #     p_n_s.remove(Predicate(e.predicate.name, arguments))
+
+                        #         new_
+                        # else: 
+                        #     prob = new_state.copy()
+                        #     arguments = []
+                        #     for p in e.predicate.args:
+                        #         arguments.append(Term.constant(p_p[p].value))
                             
-                            if e[1].is_positive():
-                                new_state.add(Predicate(e[1].predicate.name, arguments))
-                            else:
-                                new_state.remove(Predicate(e[1].predicate.name, arguments))
-                        else: 
-                            prob = new_state.copy()
-                            arguments = []
-                            for p in e[1].predicate.args:
-                                arguments.append(Term.constant(p_p[p].value))
-                            
-                            if e[1].is_positive():
-                                new_state.add(Predicate(e[1].predicate.name, arguments))
-                            else:
-                                new_state.remove(Predicate(e[1].predicate.name, arguments))
+                        #     if e.is_positive():
+                        #         new_state.add(Predicate(e.predicate.name, arguments))
+                        #     else:
+                        #         new_state.remove(Predicate(e.predicate.name, arguments))
                             
 
-                    possible_path[f"{a.name}({str({k : v.value for k,v in p_p.items()})})"] = new_state
+                    # possible_path[f"{a.name}({str({k : v.value for k,v in p_p.items()})})"] = new_state
             else:
                 if len(a.params) == 0 and has_singular_term and actuable:
                     new_state = init.copy()
-                    for e in a.effects:
+                    for p,e in a.effects:
 
-                        if e[0] == 1.0: # non probabilistico
+                        if p == 1.0: # non probabilistico
                             
-                            if e[1].is_positive():
-                                new_state.add(Predicate(e[1].predicate.name))
+                            if e.is_positive():
+                                new_state.add(Predicate(e.predicate.name))
                             else:
-                                new_state.remove(Predicate(e[1].predicate.name))
+                                new_state.remove(Predicate(e.predicate.name))
                     possible_path[f"{a.name}"] = new_state
 
         # print(possible_path)
@@ -239,22 +260,23 @@ def semantic_check(domain, problem) :
 
 def create_graph( graph : nx.Graph, actions, current, current_index, to_be_visited, visited): #graph [0] -> init , to_be_visited [init]
     if len(to_be_visited) > 0:
-        neighbors = get_possible_paths(current, actions) #[{action: state}]
+        neighbors = get_possible_paths(current, actions) #[{action(params)->string : state-> set()}]
         previous = current_index
         new_index = current_index
         for act in neighbors:
             new_state = neighbors[act]
             if not new_state in visited:
                 new_index += 1
-                graph.add_node(new_index, state = new_state)
+                graph.add_node(new_index, state = new_state, type = "avg") #TODO add type max. avg 
                 graph.add_edges_from( [(previous ,new_index, {"action": act})] )
                 to_be_visited.append(new_index)
             else:
-                pass #collegare con nodo già visitato
-
+                #TODO: nodo = visited[new_state]
+                #TODO: add_edges_from([(previous, nodo, {"action": act})]) | add_edge(previous, nodo, action = act)
+                pass
         current_index = to_be_visited.pop()
         current = graph.nodes[current_index]['state']
-        visited.append(current_index)
+        visited.append({current: current_index})
 
         return create_graph(graph,actions,current,current_index,to_be_visited,visited)
     else:
@@ -266,7 +288,9 @@ if __name__ == '__main__':
 
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
-    get_possible_paths(problem.init, domain.operators)
+    for a in domain.operators:
+        print(a)
+    # get_possible_paths(problem.init, domain.operators)
     # if semantic_check(domain, problem):
     #     print("semantic check passed!")
     #     #problem.init -> stato iniziale -> a1, a2, a3 

@@ -20,25 +20,45 @@ class Action(object):
         self._name    = name
         self._params  = params
         self._precond = precond
-        self._effects = self.compute_probability(effects)
+        self._effects = self.compute_probability(self.ground_probability(effects))
 
 
     def compute_probability(self, effects):
-        print(effects)
+        # print(effects)
         final = []
-        for e in effects:
-            if isinstance(e,tuple):
-                p, effect = e
-                if not isinstance(effect, list):
-                    final.append(e)   
-                else:
-                    final += [(p*sub_p, sub_e) for sub_p, sub_e in self.compute_probability(effect)]
-            elif isinstance(e,list):
-                for p, effect in e:
-                    final += [(p*sub_p, sub_e) for sub_p, sub_e in self.compute_probability(effect)]
-        return final   
+        if len(effects) == 1:
+            return effects
+        for probability, effect in effects:
+            final += [(probability * sub_p, sub_e) for sub_p, sub_e in self.compute_probability(effect)]
+        return final  
 
+    def ground_probability(self, effects):
+        det_list = []
+        prob_list = []
+        prob_count = 0
+        for p,e in effects:
+            if p<1:
+                prob_list.append((p,e))
+                prob_count += p
+            else:
+                det_list.append((p,e))
 
+         
+        if not len(prob_list) == 0:
+
+            if prob_count < 1:
+                prob_list.append((1-prob_count, []))
+
+            new_prob_list = []
+            for p,e in prob_list:
+                for d in det_list:
+                    e.append(d)
+                new_prob_list.append((p,self.ground_probability(e)))
+            # print(prob_list)
+            return new_prob_list
+        else:
+            return [(1.0 ,[eff for _,eff in det_list])]
+    
     @property
     def name(self):
         return self._name
@@ -54,7 +74,7 @@ class Action(object):
     @property
     def effects(self):
         return self._effects[:]
-    #TODO: separare effetti probabilistici da effetti non probabilistici
+    
 
     @property
     def is_probabilistic(self):

@@ -399,7 +399,7 @@ def p_effects(p):
     '''effects : effect
                | LPAREN AND_KEY effects_lst RPAREN'''
     if len(p) == 2:
-        p[0] = [p[1]]
+        p[0] = p[1]
     elif len(p) == 5:
         p[0] = p[3]
 
@@ -407,15 +407,15 @@ def p_effects_lst(p):
     '''effects_lst : effect effects_lst
                    | effect'''
     if len(p) == 2:
-        p[0] = [p[1]]
+        p[0] = p[1]
     elif len(p) == 3:
-        p[0] = [p[1]] + p[2]
+        p[0] = p[1] + p[2]
 
 def p_effect(p):
     '''effect : literal
               | LPAREN PROBABILISTIC_KEY probability_list RPAREN'''
     if len(p) == 2:
-        p[0] = (1.0, p[1])
+        p[0] = [(1.0, p[1])]
     elif len(p) == 5:
         p[0] = p[3]
 
@@ -423,9 +423,9 @@ def p_probability_list(p):
     '''probability_list : PROBABILITY effects
                         | PROBABILITY effects probability_list'''
     if len(p) == 3:
-        p[0] = (p[1],p[2])
+        p[0] = [(p[1],p[2])]
     elif len(p) == 4:
-        p[0] = [(p[1],p[2])] + [p[3]]
+        p[0] = [(p[1],p[2])] + p[3]
 
 def p_literals_lst(p):
     '''literals_lst : literal literals_lst

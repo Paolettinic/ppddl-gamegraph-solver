@@ -80,8 +80,6 @@ def apply_effects(current_state,effect):
 
 
 def get_possible_paths(init, actions): 
-    #TODO: add multiple actions: move(x1,x2), move(x1,x3) are both valid!
-    # init = state.init
 
     possible_path = {} #{action -> Action : stato_finale -> list(Predicates)}
 
@@ -145,64 +143,47 @@ def get_possible_paths(init, actions):
                     else:
                         possible_parameters += [x for x in s[prec]]
                         
-        
+            ## UNCOMMENT THESE LINES TO SEE FORMATTED POSSIBLE PARAMS.
             # for p in possible_parameters:
             #     for arg in p:
             #         print(arg,"\t",str(p[arg]))
             
             if len(possible_parameters) > 0:
-                for p_p in possible_parameters: #TODO: controllare se i possible parameters sono corretti
+                for p_p in possible_parameters:
                 #     # print(p_p) -> {"from": val, "to": val}
-                    probabilistic_new_states = []
-                    new_state = init.copy()
-                    probabilistic_new_states.append(new_state.copy())
+                    new_states = []
 
+                    for probability, effect in a.effects:
+                        new_state = init.copy()
+                        for e in effect:
+                            arguments = []
 
-                    for e in a.effects:
-                        print(e)
-                        # if p == 1.0: # non probabilistico
-                        #     for p_n_s in probabilistic_new_states:
-                        #         arguments = []
+                            for p in e.predicate.args:
+                                arguments.append(Term.constant(p_p[p].value))
 
-                        #         # for p in e.predicate.args:
-                        #         #     arguments.append(Term.constant(p_p[p].value))
+                            if e.is_positive():
+                                new_state.add(Predicate(e.predicate.name, arguments))
+                            else:
+                                new_state.remove(Predicate(e.predicate.name, arguments))
 
-                        #         # if e.is_positive():
-                        #         #     p_n_s.add(Predicate(e.predicate.name, arguments))
-                        #         # else:
-                        #         #     p_n_s.remove(Predicate(e.predicate.name, arguments))
+                        new_states.append({"p":probability, "s":new_state})
 
-                        #         new_
-                        # else: 
-                        #     prob = new_state.copy()
-                        #     arguments = []
-                        #     for p in e.predicate.args:
-                        #         arguments.append(Term.constant(p_p[p].value))
-                            
-                        #     if e.is_positive():
-                        #         new_state.add(Predicate(e.predicate.name, arguments))
-                        #     else:
-                        #         new_state.remove(Predicate(e.predicate.name, arguments))
-                            
-
-                    # possible_path[f"{a.name}({str({k : v.value for k,v in p_p.items()})})"] = new_state
+                    possible_path[f"{a.name}({str({k : v.value for k,v in p_p.items()})})"] = new_states
             else:
                 if len(a.params) == 0 and has_singular_term and actuable:
-                    new_state = init.copy()
-                    for p,e in a.effects:
+                    new_states = []
 
-                        if p == 1.0: # non probabilistico
-                            
+                    for probability, effect in a.effects:
+                        new_state = init.copy()
+                        for e in effect:
                             if e.is_positive():
                                 new_state.add(Predicate(e.predicate.name))
                             else:
                                 new_state.remove(Predicate(e.predicate.name))
-                    possible_path[f"{a.name}"] = new_state
 
-        # print(possible_path)
+                        new_states.append({"p":probability, "s":new_state})
 
-
-        
+                    possible_path[f"{a.name}()"] = new_states       
 
     return possible_path
 
@@ -288,9 +269,9 @@ if __name__ == '__main__':
 
     domain  = PDDLParser.parse(args.domain)         # Vedi classe Domain
     problem = PDDLParser.parse(args.problem)        # Vedi classe Problem  
-    for a in domain.operators:
-        print(a)
-    # get_possible_paths(problem.init, domain.operators)
+    # for a in domain.operators:
+    #     print(a)
+    get_possible_paths(problem.init, domain.operators)
     # if semantic_check(domain, problem):
     #     print("semantic check passed!")
     #     #problem.init -> stato iniziale -> a1, a2, a3 
@@ -331,46 +312,4 @@ procedure DFS_iterative(G, v) is
             S.pop() 
 """
 
-
-# idx_row_prec = 0
-# if len(preconditions_dic) - 1 > 0 : #TODO: add actuable check
-#     for idx in range(len(preconditions_dic) - 1): #precondition_dic {0:precodition1, 1:precondition2 ...}
-#         idx_row_next = 0
-#         not_found = True
-#         # if not_found: #commentare
-#         for arg in s[preconditions_dic[idx]]: #per ogni singola precondizione
-#             if not_found:
-#                 for i in range(idx_row_next,len(s[preconditions_dic[idx]][arg])):
-#                     if s[preconditions_dic[idx]][arg][i].value in map(lambda x : x.value,s[preconditions_dic[idx + 1]][arg]):
-#                         not_found = False
-#                         idx_row_next = list(map(
-#                             lambda x : x.value,
-#                             s[preconditions_dic[idx + 1]][arg])
-#                             ).index(
-#                                 s[preconditions_dic[idx]][arg][i].value
-#                             )
-#                         idx_row_prec = i
-#                         #
-#                         if len(s[preconditions_dic[idx]]) < len(s[preconditions_dic[idx + 1]]):
-#                             for matched_arg in s[preconditions_dic[idx + 1]]:
-#                                 params[matched_arg].append(s[preconditions_dic[idx + 1]][matched_arg][idx_row_next].value)
-#                         else:
-#                             params[arg].append(s[preconditions_dic[idx]][arg][i].value)
-#             else:       
-#                 if s[preconditions_dic[idx]][arg][idx_row_prec] == s[preconditions_dic[idx+1]][arg][idx_row_next]:
-#                     params[par.name].append(s[preconditions_dic[idx]][arg][idx_row_prec].value)
-#                 else:
-#                     for par in a.params:
-#                         params[par.name] = None
-#                     not_found = True
-
-
-
-# else:
-#     if actuable:
-#         for e in a.effects:
-#             print(e) #TODO: actions execution
-
-# print(list(map(str,new_state))) #stato corrente
-# print(params)
 

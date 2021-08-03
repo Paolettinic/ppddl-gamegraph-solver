@@ -340,9 +340,8 @@ def p_function_def(p):
         p[0] = Function(p[2])
 
 def p_actions_def(p):
-    '''actions_def : action_def
-                    | action_def_lst'''
-    p[0] = {"actions":p[1]}
+    '''actions_def : action_def_lst'''
+    p[0] = {"actions": p[1]}
 
 def p_action_def_lst(p):
     '''action_def_lst : action_def action_def_lst

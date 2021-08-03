@@ -32,7 +32,7 @@
 		(road x02y06 x01y07) (road x02y06 x03y07)
 		(road x02y08 x01y09)
 		(road x02y10 x01y11) (road x02y10 x03y11)
-		(road x02y012 x01y13)
+		(road x02y12 x01y13)
 
 		(road x03y03 x02y04) (road x03y03 x03y05) (road x03y03 x04y04)
 		(road x03y05 x03y07) (road x03y05 x04y06)

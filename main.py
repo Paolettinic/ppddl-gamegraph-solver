@@ -15,20 +15,20 @@
 
 
 import argparse
-from pddlparser import PDDLParser
 import networkx as nx
-from predicate import Predicate
-from term import Term
 import matplotlib.pyplot as plt
+from parser.pddlparser import PDDLParser
+from parser.predicate import Predicate
+from parser.term import Term
 
 
 def parse():
     usage = 'python3 main.py <DOMAIN> <INSTANCE>'
-    description = 'pypddl-parser is a PDDL parser built on top of ply.'
+    description = 'ppddl-gamegraph-solver is a PPDDL to game graph converter, based on ply and solved with simplex method.'
     parser = argparse.ArgumentParser(usage=usage, description=description)
 
-    parser.add_argument('domain',  type=str, help='path to PDDL domain file')
-    parser.add_argument('problem', type=str, help='path to PDDL problem file')
+    parser.add_argument('domain',  type=str, help='path to PPDDL domain file')
+    parser.add_argument('problem', type=str, help='path to PPDDL problem file')
 
     return parser.parse_args()
 

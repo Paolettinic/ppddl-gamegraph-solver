@@ -17,13 +17,13 @@
 from ply import lex
 from ply import yacc
 
-from term import Term
-from literal import Literal
-from predicate import Predicate
-from action import Action
-from domain import Domain
-from problem import Problem
-from function import Function
+from parser.term import Term
+from parser.literal import Literal
+from parser.predicate import Predicate
+from parser.action import Action
+from parser.domain import Domain
+from parser.problem import Problem
+from parser.function import Function
 
 tokens = (
     'NAME',

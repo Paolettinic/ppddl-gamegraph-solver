@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 from parser.pddlparser import PDDLParser
 from parser.predicate import Predicate
 from parser.term import Term
+from solver.solver import solve
 
 
 def parse():
@@ -106,16 +107,13 @@ def get_possible_paths(init, actions):
         return new_state
 
     def preconditions_natural_join(preconditions1, preconditions2):
-        if preconditions2 == []:
-            return preconditions1
-        elif preconditions1 == []:
-            return preconditions2
 
         def match(dict1, dict2, join_on):
             return all(dict1[j] == dict2[j] for j in join_on)
 
-        t1_set = set(preconditions1[0])
-        t2_set = set(preconditions2[0])
+        t1_set = set(preconditions1[0]) if len(preconditions1) > 0 else set()
+        t2_set = set(preconditions2[0]) if len(preconditions2) > 0 else set()
+
         join_on = t1_set & t2_set #Common keys
         diff = t2_set - join_on #Difference
 
@@ -131,8 +129,8 @@ def get_possible_paths(init, actions):
 
 
     possible_path = {} #{action -> str : stato_finale -> list(Predicates)}
-
     for a in actions:
+        print(f"________{a.name}__________")
         actuable = True
         #preconditions_dic = {precondizione1: {arg1: [valori],arg2[valori]},precondizione2: {arg1: [valori],arg2[valori]}}  
         preconditions_dic = {}
@@ -141,7 +139,7 @@ def get_possible_paths(init, actions):
             if actuable:
                 if p.predicate.arity == 0:
                     actuable = p.predicate.name in map(str,init)
-                    preconditions_dic[p.predicate.name] = []
+                    # preconditions_dic[p.predicate.name] = []
                     
                 else:
                     preconditions_dic[p.predicate.name] = []
@@ -150,11 +148,13 @@ def get_possible_paths(init, actions):
                         if p.predicate.name == pred.name:
                             preconditions_dic[p.predicate.name] += [dict(zip(p.predicate.args,pred.args))]
 
+        for p in preconditions_dic:
+            print(f"{p} : {str(preconditions_dic[p])}")
         possible_parameters = [{}]
-
         if actuable:
             for name in preconditions_dic:
                 possible_parameters = preconditions_natural_join(possible_parameters,preconditions_dic[name])
+                print(possible_parameters)
                 if possible_parameters == []:
                     break
 
@@ -179,6 +179,13 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
     visited.append(current)
 
     path = get_possible_paths(current,actions)
+    # for c in current:
+    #     if c.name == "vehicle-at":
+    #         print(c)
+    # print(len(path))
+    # print("possible path")
+    # for p in path:
+    #     print(p)
     if len(path) == 0:
         graph.nodes[current_index]["type"] = "sink"
         return
@@ -189,7 +196,7 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
             
             avg_index = new_index
             graph.add_node(avg_index, type = "avg") 
-            graph.add_edge(current_index ,avg_index,weight=1.0)
+            graph.add_edge(current_index ,avg_index,weight=1.0,action = actuable_action)
             to_be_visited = []
             for state in path[actuable_action]:
                 
@@ -202,7 +209,7 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
                 if is_goal:
                     if min(graph) == 0:
                         graph.add_node(-1, state = goal_terms, type = "goal")
-                    graph.add_edge(avg_index, -1, weight=state['p'])
+                    graph.add_edge(avg_index, -1, weight=state['p'],action = actuable_action)
  
                 else:
                     new_index = max(graph) + 1
@@ -210,13 +217,13 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
                     if state['s'] not in visited:
                     
                         graph.add_node(new_index, state = state['s'], type = "max") 
-                        graph.add_edge(avg_index ,new_index,weight=state['p'])
+                        graph.add_edge(avg_index ,new_index,weight=state['p'],action = actuable_action)
                         to_be_visited.append((new_index,state['s']))
                     else:
                         for node in graph: 
                             if "state" in graph.nodes[node]: #Avoids avg nodes
                                 if state["s"] == graph.nodes[node]["state"]:
-                                    graph.add_edge(avg_index ,int(node) ,weight=state['p'])
+                                    graph.add_edge(avg_index ,int(node) ,weight=state['p'],action = actuable_action)
                                     break
                     for new_index, new_state in to_be_visited:
                         create_graph( graph, actions, new_state, new_index, goal_terms, visited)
@@ -233,19 +240,19 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
                 if is_goal:
                     if min(graph) == 0:
                         graph.add_node(-1, state = goal_terms, type = "goal")
-                    graph.add_edge(current_index ,-1,weight=1.0)
+                    graph.add_edge(current_index ,-1,weight=1.0,action = actuable_action)
                 else:
                     new_state = state['s']
                     if new_state not in visited:
                         graph.add_node(new_index, state = new_state , type = "max") 
-                        graph.add_edge(current_index ,new_index, weight=1.0)
+                        graph.add_edge(current_index ,new_index, weight=1.0,action = actuable_action)
                         
                         create_graph( graph, actions, new_state, new_index, goal_terms, visited)
                     else:
                         for node in graph: #TODO: cambiare in while
                             if "state" in graph.nodes[node]:
                                 if new_state == graph.nodes[node]["state"]:
-                                    graph.add_edge(current_index ,int(node) , weight=1.0)
+                                    graph.add_edge(current_index ,int(node) , weight=1.0,action = actuable_action)
                                     break
      
 
@@ -270,13 +277,14 @@ if __name__ == '__main__':
 
         nodes_avg = []
         nodes_max = []
-        nodes_goal = [-1]
+        nodes_goal = []
         nodes_start = [0]
         nodes_sink = []
         for x,y in G.nodes(data=True):
             if y['type']=='avg': nodes_avg.append(x)
             if y['type']=='max': nodes_max.append(x)
             if y['type']=='sink': nodes_sink.append(x)
+            if y['type']=='goal': nodes_goal.append(x)
         pos = nx.kamada_kawai_layout(G)
         nx.draw_networkx_nodes(G,pos,nodelist=nodes_max,node_color='#00facc')
         nx.draw_networkx_nodes(G,pos,nodelist=nodes_avg,node_color='#bbff00')
@@ -285,4 +293,20 @@ if __name__ == '__main__':
         nx.draw_networkx_nodes(G,pos,nodelist=nodes_sink,node_color='#000000')
         nx.draw_networkx_edges(G,pos)
         plt.show()
-            
+        solution = solve(G)["x"]
+        
+        strategy = {}
+        for x in nodes_max:
+
+            next_state = -1#max([solution[n] for n in G.neighbors(x)])
+            max_val = -1
+            for n in G.neighbors(x):
+                if solution[n] > max_val:
+                    max_val = solution[n]
+                    next_state = n 
+            action = G[x][next_state]["action"]
+            strategy[x] = action
+        for s in strategy:
+            print(f"{s} : strategy: {strategy[s]}")
+
+

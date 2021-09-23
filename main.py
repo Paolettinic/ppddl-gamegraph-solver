@@ -130,7 +130,7 @@ def get_possible_paths(init, actions):
 
     possible_path = {} #{action -> str : stato_finale -> list(Predicates)}
     for a in actions:
-        print(f"________{a.name}__________")
+        # print(f"________{a.name}__________")
         actuable = True
         #preconditions_dic = {precondizione1: {arg1: [valori],arg2[valori]},precondizione2: {arg1: [valori],arg2[valori]}}  
         preconditions_dic = {}
@@ -148,13 +148,13 @@ def get_possible_paths(init, actions):
                         if p.predicate.name == pred.name:
                             preconditions_dic[p.predicate.name] += [dict(zip(p.predicate.args,pred.args))]
 
-        for p in preconditions_dic:
-            print(f"{p} : {str(preconditions_dic[p])}")
+        # for p in preconditions_dic:
+            # print(f"{p} : {str(preconditions_dic[p])}")
         possible_parameters = [{}]
         if actuable:
             for name in preconditions_dic:
                 possible_parameters = preconditions_natural_join(possible_parameters,preconditions_dic[name])
-                print(possible_parameters)
+                # print(possible_parameters)
                 if possible_parameters == []:
                     break
 
@@ -170,7 +170,8 @@ def get_possible_paths(init, actions):
                         new_states.append({"p":probability, "s":new_state})
                         func_args_str = str({k : v.value for k,v in possible_parameter.items()}) if len(possible_parameter.items()) > 0 else ""
                     possible_path[f"{a.name}({func_args_str})"] = new_states
-
+    for p in possible_path:
+        print(p)
     return possible_path
 
 
@@ -270,7 +271,7 @@ if __name__ == '__main__':
         print("semantic check passed!")
         #problem.init -> stato iniziale -> a1, a2, a3 
         node_idx = 0
-        G = nx.DiGraph()
+        G = nx.MultiDiGraph()
         G.add_node(node_idx, state = problem.init,type="max")
 
         create_graph( G, domain.operators, problem.init, node_idx, problem.goal)
@@ -294,7 +295,7 @@ if __name__ == '__main__':
         nx.draw_networkx_edges(G,pos)
         plt.show()
         solution = solve(G)["x"]
-        
+        print(solution)
         strategy = {}
         for x in nodes_max:
 
@@ -304,7 +305,7 @@ if __name__ == '__main__':
                 if solution[n] > max_val:
                     max_val = solution[n]
                     next_state = n 
-            action = G[x][next_state]["action"]
+            action = G[x][next_state][0]["action"]
             strategy[x] = action
         for s in strategy:
             print(f"{s} : strategy: {strategy[s]}")

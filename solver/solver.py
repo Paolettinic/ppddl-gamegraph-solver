@@ -21,8 +21,14 @@ def generate_matrices(graph : nx.Graph):
         elif graph.nodes[node]["type"] == "avg": 
             Ai = np.zeros(len(graph))
             Ai[node] = -1.0 
+            prob = 0
             for j in graph.neighbors(node):
-                Ai[j] = graph.edges[(node,j)]["weight"]
+                
+                for e in graph[node][j]:
+                    prob += graph[node][j][e]["weight"]
+                if len(graph[node][j]) > 1:
+                    print(prob)
+                Ai[j] = prob
 
             A_ub.append(Ai.copy())
             b_ub.append(0.0)

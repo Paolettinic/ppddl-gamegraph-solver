@@ -35,4 +35,4 @@ positional arguments:
 optional arguments:
   -h, --help  show this help message and exit
 ```
-
+Further details are in the file [Report_ReasoningAgents.pdf](https://github.com/Paolettinic/ppddl-gamegraph-solver/blob/master/Report_ReasoningAgents.pdf)

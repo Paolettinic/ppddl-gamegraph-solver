@@ -12,8 +12,6 @@
 		(not-flattire)
 		(hasspare))
 	
-	(:functions (speed_limit ?x - road))
-
 	(:action move-car
 		:parameters (?from - location ?to - location)
 		:precondition (and (road ?from ?to) (vehicle-at ?from) (not-flattire))

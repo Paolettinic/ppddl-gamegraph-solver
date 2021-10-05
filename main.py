@@ -1,18 +1,3 @@
-# This file is part of pypddl-PDDLParser.
-
-# pypddl-parser is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# pypddl-parser is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with pypddl-parser.  If not, see <http://www.gnu.org/licenses/>.
-
 
 import argparse
 import networkx as nx
@@ -46,11 +31,7 @@ def semantic_check(domain, problem) :
             if not t.type in domain.types:
                 print(f"Error: {t.type} not defined in domain types")
                 return False
-    # check if functions matches predicates:
-    # for f in domain.functions:
-    #     if not f.predicate in domain_predicates:
-    #         print(f"Error: predicate {f.predicate} of function {f.name} not defined in domain")
-    #         return False
+
     for a in domain.operators:
         for p in a.params:
             if not p.type in domain.types:
@@ -147,9 +128,6 @@ def get_possible_paths(init, actions):
                     for pred in init:
                         if p.predicate.name == pred.name:
                             preconditions_dic[p.predicate.name] += [dict(zip(p.predicate.args,pred.args))]
-
-        # for p in preconditions_dic:
-            # print(f"{p} : {str(preconditions_dic[p])}")
         possible_parameters = [{}]
         if actuable:
             for name in preconditions_dic:
@@ -161,7 +139,7 @@ def get_possible_paths(init, actions):
 
             
             if len(possible_parameters) > 0:
-                for possible_parameter in possible_parameters:                    
+                for possible_parameter in possible_parameters:
                     new_states = []
 
                     for probability, effect in a.effects:
@@ -180,13 +158,7 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
     visited.append(current)
 
     path = get_possible_paths(current,actions)
-    # for c in current:
-    #     if c.name == "vehicle-at":
-    #         print(c)
-    # print(len(path))
-    # print("possible path")
-    # for p in path:
-    #     print(p)
+
     if len(path) == 0:
         graph.nodes[current_index]["type"] = "sink"
         return
@@ -232,31 +204,29 @@ def create_graph( graph : nx.Graph, actions, current : set, current_index, goal_
 
         else: #Deterministico
             #Check if is a goal state
-                state = path[actuable_action][0]
-                is_goal = True
-                for g in goal_terms:
-                    if g not in state['s']:
-                        is_goal = False
+            state = path[actuable_action][0]
+            is_goal = True
+            for g in goal_terms:
+                if g not in state['s']:
+                    is_goal = False
 
-                if is_goal:
-                    if min(graph) == 0:
-                        graph.add_node(-1, state = goal_terms, type = "goal")
-                    graph.add_edge(current_index ,-1,weight=1.0,action = actuable_action)
+            if is_goal:
+                if min(graph) == 0:
+                    graph.add_node(-1, state = goal_terms, type = "goal")
+                graph.add_edge(current_index ,-1,weight=1.0,action = actuable_action)
+            else:
+                new_state = state['s']
+                if new_state not in visited:
+                    graph.add_node(new_index, state = new_state , type = "max") 
+                    graph.add_edge(current_index ,new_index, weight=1.0,action = actuable_action)
+                    
+                    create_graph( graph, actions, new_state, new_index, goal_terms, visited)
                 else:
-                    new_state = state['s']
-                    if new_state not in visited:
-                        graph.add_node(new_index, state = new_state , type = "max") 
-                        graph.add_edge(current_index ,new_index, weight=1.0,action = actuable_action)
-                        
-                        create_graph( graph, actions, new_state, new_index, goal_terms, visited)
-                    else:
-                        for node in graph: #TODO: cambiare in while
-                            if "state" in graph.nodes[node]:
-                                if new_state == graph.nodes[node]["state"]:
-                                    graph.add_edge(current_index ,int(node) , weight=1.0,action = actuable_action)
-                                    break
-     
-
+                    for node in graph: #TODO: cambiare in while
+                        if "state" in graph.nodes[node]:
+                            if new_state == graph.nodes[node]["state"]:
+                                graph.add_edge(current_index ,int(node) , weight=1.0,action = actuable_action)
+                                break
 
 
 if __name__ == '__main__':
@@ -299,7 +269,7 @@ if __name__ == '__main__':
         strategy = {}
         for x in nodes_max:
 
-            next_state = -1#max([solution[n] for n in G.neighbors(x)])
+            next_state = -1
             max_val = -1
             for n in G.neighbors(x):
                 if solution[n] > max_val:
@@ -309,5 +279,3 @@ if __name__ == '__main__':
             strategy[x] = action
         for s in strategy:
             print(f"{s} : strategy: {strategy[s]}")
-
-

@@ -26,7 +26,7 @@ $ pip3 install networkx
 $ python3 main.py -h
 usage: python3 main.py <DOMAIN> <INSTANCE>
 
-pypddl-parser is a PDDL parser built on top of ply.
+ppddl-gamegraph-solver is a PPDDL parser and solver built on top of ply, that uses simplex method.
 
 positional arguments:
   domain      path to PDDL domain file
